@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Boo Planet (v1.3)</title>
+  <title>Boo Planet (v1.3 → v1.4 concept)</title>
 
   <!-- Retro arcade font (online). If you want offline, download and self-host. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,6 +26,12 @@
 
       --arcadeBlue1:#2aa8ff;
       --arcadeBlue2:#0a4ee6;
+
+      --arcadePink1:#ff5cc7;
+      --arcadePink2:#b400ff;
+
+      --arcadeMint1:#41ffd6;
+      --arcadeMint2:#00b6ff;
     }
 
     *{ box-sizing:border-box; }
@@ -45,7 +51,7 @@
       width:100%;
       height:100%;
       display:block;
-      touch-action:none; /* we manage dragging */
+      touch-action:none;
     }
 
     .ui{
@@ -56,6 +62,7 @@
       justify-content:center;
       padding:18px;
       pointer-events:none;
+      z-index: 20;
     }
 
     .panel{
@@ -136,11 +143,58 @@
         0 20px 50px rgba(0,0,0,0.42),
         0 0 0 1px rgba(255,255,255,0.10) inset,
         0 0 30px rgba(42,168,255,0.20);
-      transition: transform .12s ease, filter .12s ease;
+      transition: transform .12s ease, filter .12s ease, opacity .25s ease;
       min-width: 180px;
       -webkit-tap-highlight-color: transparent;
     }
     .startBtn:active{ transform: translateY(2px) scale(0.99); filter: brightness(0.98); }
+    .startBtn.isHidden{ opacity: 0; pointer-events:none; }
+
+    .pillBtn{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom: 18px;
+      padding-bottom: env(safe-area-inset-bottom);
+      z-index: 30;
+      pointer-events:auto;
+
+      font-family: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      letter-spacing: .7px;
+      font-size: clamp(12px, 2.0vw, 14px);
+      padding: 14px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      cursor:pointer;
+
+      background:
+        radial-gradient(220px 100px at 20% 0%, rgba(255,255,255,0.20), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0) 42%),
+        linear-gradient(180deg, var(--arcadeMint1), var(--arcadeMint2));
+      color: rgba(244,248,255,0.98);
+      text-shadow: 0 0 16px rgba(255,255,255,0.18);
+      box-shadow:
+        0 20px 50px rgba(0,0,0,0.42),
+        0 0 0 1px rgba(255,255,255,0.10) inset,
+        0 0 30px rgba(65,255,214,0.18);
+      transition: transform .12s ease, filter .12s ease, opacity .25s ease;
+      -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      pointer-events:none;
+    }
+    .pillBtn.isVisible{ opacity: 1; pointer-events:auto; }
+    .pillBtn:active{ transform: translateX(-50%) translateY(2px) scale(0.99); filter: brightness(0.98); }
+
+    .pillBtn.pink{
+      background:
+        radial-gradient(220px 100px at 20% 0%, rgba(255,255,255,0.20), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0) 42%),
+        linear-gradient(180deg, var(--arcadePink1), var(--arcadePink2));
+      box-shadow:
+        0 20px 50px rgba(0,0,0,0.42),
+        0 0 0 1px rgba(255,255,255,0.10) inset,
+        0 0 30px rgba(255,92,199,0.22);
+    }
 
     .hint{
       margin-top: 2px;
@@ -169,6 +223,7 @@
         0 0 18px rgba(255,255,255,0.10),
         0 0 30px rgba(143,243,255,0.10);
       opacity: 0.95;
+      z-index: 25;
     }
 
     /* Floating message overlay (fade in/out via JS) */
@@ -181,7 +236,7 @@
       display:flex;
       justify-content:center;
       pointer-events:none;
-      z-index: 50;
+      z-index: 60;
     }
     .messageCard{
       width: min(860px, 100%);
@@ -228,7 +283,7 @@
       text-align:center;
       pointer-events:none;
       user-select:none;
-      z-index: 60;
+      z-index: 70;
 
       font-size: 0.72rem;
       color: rgba(214,230,255,0.52);
@@ -240,12 +295,13 @@
     @media (prefers-reduced-motion: reduce){
       .panel, .messageCard{ backdrop-filter:none; -webkit-backdrop-filter:none; }
       .messageCard{ transition:none; }
+      .pillBtn, .startBtn{ transition:none; }
     }
   </style>
 </head>
 
 <body>
-  <canvas id="stage" aria-label="Boo Planet star stage"></canvas>
+  <canvas id="stage" aria-label="Boo Planet stage"></canvas>
 
   <audio id="bgm" preload="auto" loop>
     <source src="assets/music/boo-planet.mp3" type="audio/mpeg">
@@ -266,11 +322,13 @@
 
         <div class="copy">
           <p><strong style="color:rgba(244,248,255,0.95);">This is a sensory cause-and-effect playground.</strong></p>
-          <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs. 
-            <p>Press the star to see it glow, push and pull the sattelites to change their trajectory... Boo Planet can help young children to develop:</p>
+          <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs.</p>
+          <p>Press the star to see it glow, push and pull the sattelites to change their trajectory... Boo Planet can help young children to develop:</p>
           <ul>
             <li><strong>Cause &amp; effect understanding</strong></li>
-            <li><strong>Fine Motor control</strong></li>
+            <li><strong>Motor control</strong></li>
+            <li><strong>Sensory processing</strong></li>
+            <li><strong>Emotional safety with screens</strong></li>
           </ul>
         </div>
 
@@ -283,7 +341,11 @@
     <div class="screen" id="play"></div>
   </div>
 
-  <div class="pressToPlay" id="pressToPlay">Press and hold the celestial bodies to control their orbit...</div>
+  <div class="pressToPlay" id="pressToPlay">Press to Play</div>
+
+  <!-- Action buttons -->
+  <button class="pillBtn isVisible" id="visitBtnSpace" type="button" aria-label="Visit Boo Planet">Visit Boo Planet</button>
+  <button class="pillBtn pink" id="visitBtnPlanet" type="button" aria-label="Visit Boo Planet from planet">Visit Boo Planet</button>
 
   <!-- ✅ Copyright mark (visible across welcome + play) -->
   <div class="copyrightMark">© 2026 Boo Industries. All rights reserved.</div>
@@ -295,6 +357,7 @@
       const lerp = (a, b, t) => a + (b - a) * t;
       const lerpColor = (c1, c2, t) => ({ r: lerp(c1.r,c2.r,t), g: lerp(c1.g,c2.g,t), b: lerp(c1.b,c2.b,t) });
       const toRGBA = (c, a=1) => `rgba(${c.r|0},${c.g|0},${c.b|0},${a})`;
+      const rand = (a,b)=> lerp(a,b,Math.random());
 
       const easeInOutCubic = t => (t < 0.5) ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
@@ -308,6 +371,9 @@
       const play = document.getElementById('play');
       const startBtn = document.getElementById('startBtn');
       const pressToPlay = document.getElementById('pressToPlay');
+
+      const visitBtnSpace = document.getElementById('visitBtnSpace');
+      const visitBtnPlanet = document.getElementById('visitBtnPlanet');
 
       const messageCard = document.getElementById('messageCard');
       const messageText = document.getElementById('messageText');
@@ -329,7 +395,6 @@
       resize();
 
       // ---------- Background Starfield ----------
-      const rand = (a,b)=> lerp(a,b,Math.random());
       function makeStars(count, depthMin, depthMax){
         const arr=[];
         for(let i=0;i<count;i++){
@@ -395,7 +460,69 @@
         };
       }
 
-      // ---------- Main Star ----------
+      // ---------- Messages ----------
+      let messagePlaying = false;
+      let messageTimers = [];
+      function clearMessageTimers(){
+        for (const id of messageTimers) clearTimeout(id);
+        messageTimers = [];
+      }
+      function setMessageVisible(isVisible){
+        if (isVisible) messageCard.classList.add('isVisible');
+        else messageCard.classList.remove('isVisible');
+      }
+      function showMessage(text){
+        messageText.textContent = text;
+        requestAnimationFrame(() => setMessageVisible(true));
+      }
+      function hideMessage(){ setMessageVisible(false); }
+      function showToast(text, ms=2400){
+        clearMessageTimers();
+        messagePlaying = true;
+        showMessage(text);
+        messageTimers.push(setTimeout(() => hideMessage(), Math.max(0, ms-520)));
+        messageTimers.push(setTimeout(() => { hideMessage(); messagePlaying=false; }, ms));
+      }
+
+      // ---------- App State ----------
+      const SCENE = {
+        SPACE: 'space',
+        ZOOM_TO_PLANET_TITLE: 'zoomToPlanetTitle',
+        BOO_PLANET: 'booPlanet',
+        ZOOM_TO_LEVEL: 'zoomToLevel',
+        LEVEL: 'level'
+      };
+
+      let allowInput = false;
+      let scene = SCENE.SPACE;
+
+      // Camera zoom (we "zoom into" by scaling around the center body)
+      const camera = {
+        zoom: 1,
+        targetZoom: 1,
+        t0: 0,
+        dur: 1300,
+        active: false,
+        from: 1,
+        to: 1
+      };
+
+      function startCameraZoom(toZoom, durMs){
+        camera.active = true;
+        camera.t0 = performance.now();
+        camera.dur = durMs;
+        camera.from = camera.zoom;
+        camera.to = toZoom;
+      }
+      function updateCamera(nowMs){
+        if (!camera.active) return;
+        const t = clamp((nowMs - camera.t0) / camera.dur, 0, 1);
+        const e = easeInOutCubic(t);
+        camera.zoom = lerp(camera.from, camera.to, e);
+        if (t >= 1) camera.active = false;
+      }
+
+      // ---------- Space: Main Star ----------
       const star = {
         cx:0, cy:0, rBase:0,
         rot:0, rot2:0,
@@ -446,16 +573,9 @@
       initSatellites();
       window.addEventListener('resize', initSatellites, { passive:true });
 
-      // ---------- Calm universe messages (7.5s total per trigger) ----------
-      // Only start if no message is currently playing.
+      // Calm space messages (kept from v1.3)
       const UNIVERSE_MESSAGES = [
-        // Message 1 is a 2-part sequence (each part fades in/out)
-        {
-          parts: [
-            "Our universe is old…",
-            "The galaxy where we live, the Milky Way, is an estimated 13.6 billion years old!"
-          ]
-        },
+        { parts: ["Our universe is old…", "The Milky Way is an estimated 13.6 billion years old!"] },
         { text: "Space is so big… even light, the fastest thing we know, takes time to travel." },
         { text: "Stars are very far away… the sunlight we feel is about 8 minutes old when it reaches us." },
         { text: "The Milky Way is huge… it holds hundreds of billions of stars, like a sparkling ocean." },
@@ -467,48 +587,7 @@
         { text: "Gravity is a gentle pull… it helps planets stay in their paths around stars." },
         { text: "We are made of star-stuff… the atoms in our bodies were once part of ancient stars." }
       ];
-
       let messageIndex = 0;
-      let messagePlaying = false;
-      let messageTimers = [];
-
-      function clearMessageTimers(){
-        for (const id of messageTimers) clearTimeout(id);
-        messageTimers = [];
-      }
-
-      function setMessageVisible(isVisible){
-        if (isVisible) messageCard.classList.add('isVisible');
-        else messageCard.classList.remove('isVisible');
-      }
-
-      function showMessage(text){
-        messageText.textContent = text;
-        // next frame helps Safari apply transitions reliably
-        requestAnimationFrame(() => setMessageVisible(true));
-      }
-
-      function hideMessage(){
-        setMessageVisible(false);
-      }
-
-      // Plays one "part" inside a given time window with fade in/out
-      function playPart(text, partMs, fadeMs){
-        const holdMs = Math.max(0, partMs - (fadeMs * 2));
-
-        showMessage(text);
-
-        // hide after (fade in + hold)
-        messageTimers.push(setTimeout(() => {
-          hideMessage();
-        }, fadeMs + holdMs));
-
-        // ensure fully hidden by end of part
-        messageTimers.push(setTimeout(() => {
-          // keep hidden, no-op but ensures state
-          hideMessage();
-        }, partMs));
-      }
 
       function playUniverseMessage(){
         if (!allowInput) return;
@@ -522,49 +601,42 @@
 
         const totalMs = 7500;
 
-        // If 2-part message: split total evenly (each part has its own fade in/out)
+        function playPart(text, partMs, fadeMs){
+          const holdMs = Math.max(0, partMs - (fadeMs * 2));
+          showMessage(text);
+          messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
+          messageTimers.push(setTimeout(() => hideMessage(), partMs));
+        }
+
         if (msg.parts && Array.isArray(msg.parts) && msg.parts.length > 1){
           const parts = msg.parts.slice(0, 2);
-          const partMs = Math.floor(totalMs / parts.length); // 3750ms each
-          const fadeMs = 450; // gentle but readable
+          const partMs = Math.floor(totalMs / parts.length);
+          const fadeMs = 450;
 
-          // Part 1
           playPart(parts[0], partMs, fadeMs);
+          messageTimers.push(setTimeout(() => playPart(parts[1], partMs, fadeMs), partMs));
 
-          // Part 2 starts after part 1 completes
-          messageTimers.push(setTimeout(() => {
-            playPart(parts[1], partMs, fadeMs);
-          }, partMs));
-
-          // End
           messageTimers.push(setTimeout(() => {
             hideMessage();
             messagePlaying = false;
           }, partMs * parts.length + 20));
-
           return;
         }
 
-        // Single-part message: fade in / hold / fade out across 7.5s
         const fadeMs = 600;
         const holdMs = totalMs - (fadeMs * 2);
 
         showMessage(msg.text || "");
-
         messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
-        messageTimers.push(setTimeout(() => {
-          hideMessage();
-          messagePlaying = false;
-        }, totalMs + 20));
+        messageTimers.push(setTimeout(() => { hideMessage(); messagePlaying = false; }, totalMs + 20));
       }
 
-      // ---------- Interaction ----------
-      let allowInput = false;
-      let lastMs = performance.now();
+      // Space interactions
       let tapThrottleT = 0;
 
       function startMainBloom(nowMs){
         if (!allowInput) return;
+        if (scene !== SCENE.SPACE) return;
 
         if (star.state === 'idle') {
           pickNewPalette(nowMs);
@@ -592,7 +664,6 @@
           const e = easeInOutCubic(t);
           star.scale = lerp(1.0, 3.0, e);
 
-          // added verve: immediate acknowledgement + passionate swell
           const quick = easeOutCubic(clamp(t / 0.10, 0, 1));
           const long = easeInOutCubic(clamp((t - 0.05) / 0.95, 0, 1));
           star.intensity = 1.05 + 0.30 * quick + 0.90 * long;
@@ -608,8 +679,6 @@
           const t = clamp((nowMs - star.t0) / star.returnMs, 0, 1);
           const e = easeOutCubic(t);
           star.scale = lerp(3.0, 1.0, e);
-
-          // corona lingers
           const linger = 1 - 0.35 * e;
           star.intensity = (1.25 * linger) + 0.05;
 
@@ -649,7 +718,7 @@
         }
       }
 
-      // ---------- Orbit + Drag ----------
+      // Orbit + Drag
       function updateSatellitePositions(dt){
         for (const s of satellites){
           if (s.dragging) continue;
@@ -687,8 +756,127 @@
 
       const drag = { active:false, satIndex:-1, pointerId:null };
 
-      // ---------- Drawing ----------
-      function drawBackground(tSec){
+      // ---------- Boo Planet scene (planet + moon) ----------
+      const booPlanet = {
+        cx: 0,
+        cy: 0,
+        rBase: 0,
+        rot: 0,
+        rot2: 0,
+        scale: 1,
+        titleAlpha: 0,
+        showVisit: false
+      };
+
+      const moon = {
+        angle: 0,
+        orbitR: 0,
+        rBase: 0,
+        omega: (Math.PI * 2) / 24, // 24 seconds per full orbit
+        glowPulse: 0
+      };
+
+      const MOON_FACTS = [
+        "Moon Fact: Planet Earth has 1 moon.",
+        "Moon Fact: Jupiter has many moons (dozens).",
+        "Moon Fact: Some moons have oceans beneath ice.",
+        "Moon Fact: Moons can shape tides on their planets."
+      ];
+      let moonFactIndex = 0;
+
+      function computePlanetLayout(){
+        booPlanet.cx = w * 0.5;
+        booPlanet.cy = h * 0.44;
+        const minDim = Math.min(w, h);
+        booPlanet.rBase = clamp(minDim * 0.145, 92, 175);
+        moon.orbitR = booPlanet.rBase * 1.55;
+        moon.rBase = clamp(booPlanet.rBase * 0.24, 24, 54);
+      }
+      computePlanetLayout();
+      window.addEventListener('resize', computePlanetLayout, { passive:true });
+
+      function hitCircle(x,y,cx,cy,r){
+        const dx = x - cx;
+        const dy = y - cy;
+        return (dx*dx + dy*dy) <= r*r;
+      }
+
+      function moonPosition(){
+        const x = booPlanet.cx + Math.cos(moon.angle) * moon.orbitR;
+        const y = booPlanet.cy + Math.sin(moon.angle) * moon.orbitR * 0.72; // slightly squashed orbit = cute
+        return {x,y};
+      }
+
+      // ---------- Platform Level scene ----------
+      // A lively, vivid retro-ish platform tableau: sky + birds, ocean + fish/crabs, land + plants.
+      const level = {
+        t: 0,
+        birds: [],
+        fish: [],
+        crabs: [],
+        plants: [],
+        initialized: false
+      };
+
+      function initLevel(){
+        level.initialized = true;
+        level.birds = [];
+        level.fish = [];
+        level.crabs = [];
+        level.plants = [];
+
+        const birdCount = 10;
+        for(let i=0;i<birdCount;i++){
+          level.birds.push({
+            x: rand(0, w),
+            y: rand(h*0.10, h*0.38),
+            sp: rand(18, 42),
+            bob: rand(6, 14),
+            phase: rand(0, Math.PI*2),
+            flap: rand(0.9, 1.4),
+            s: rand(0.7, 1.2)
+          });
+        }
+
+        const fishCount = 14;
+        for(let i=0;i<fishCount;i++){
+          level.fish.push({
+            x: rand(0, w),
+            y: rand(h*0.66, h*0.92),
+            sp: rand(14, 36) * (Math.random()<0.5 ? 1 : -1),
+            wig: rand(10, 26),
+            phase: rand(0, Math.PI*2),
+            s: rand(0.7, 1.25),
+            hue: Math.random()<0.5 ? 'mint' : 'pink'
+          });
+        }
+
+        const crabCount = 6;
+        for(let i=0;i<crabCount;i++){
+          level.crabs.push({
+            x: rand(0, w),
+            y: rand(h*0.86, h*0.95),
+            sp: rand(10, 18) * (Math.random()<0.5 ? 1 : -1),
+            phase: rand(0, Math.PI*2),
+            s: rand(0.75, 1.15)
+          });
+        }
+
+        const plantCount = 16;
+        for(let i=0;i<plantCount;i++){
+          level.plants.push({
+            x: rand(w*0.18, w*0.82),
+            y: rand(h*0.52, h*0.66),
+            h: rand(18, 44),
+            sway: rand(0.9, 1.5),
+            phase: rand(0, Math.PI*2),
+            hue: Math.random()<0.5 ? 'lime' : 'aqua'
+          });
+        }
+      }
+
+      // ---------- Drawing helpers ----------
+      function drawBackgroundSpace(tSec){
         const g = ctx.createLinearGradient(0,0,0,h);
         g.addColorStop(0, '#020617');
         g.addColorStop(0.6, '#06102a');
@@ -741,10 +929,10 @@
         ctx.clip();
       }
 
-      function drawFlares(r, tSec, intensity){
+      function drawFlares(cx, cy, r, tSec, intensity){
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.translate(star.cx, star.cy);
+        ctx.translate(cx, cy);
 
         const beamCount = 5;
         for (let i=0;i<beamCount;i++){
@@ -777,68 +965,45 @@
         ctx.restore();
       }
 
-      function drawMainStar(tSec, nowMs){
-        const r = star.rBase * star.scale;
-        const intensity = star.intensity;
-
-        let crownAlpha = 0;
-        if (star.state === 'bloomUp'){
-          const tt = clamp((nowMs - star.t0) / star.bloomUpMs, 0, 1);
-          crownAlpha = easeOutCubic(clamp((tt - 0.78) / 0.22, 0, 1));
-        }
+      function drawOrb(cx, cy, baseR, scale, tSec, nowMs, intensityMul=1){
+        const r = baseR * scale;
+        const intensity = (1.0 + 0.15*Math.sin(tSec*0.9)) * intensityMul;
 
         // spill
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const spill = ctx.createRadialGradient(star.cx, star.cy, r*0.25, star.cx, star.cy, r*2.65);
-        spill.addColorStop(0.0, toRGBA(palette.corona, 0.16 * intensity));
+        const spill = ctx.createRadialGradient(cx, cy, r*0.25, cx, cy, r*2.65);
+        spill.addColorStop(0.0, toRGBA(palette.corona, 0.14 * intensity));
         spill.addColorStop(0.55, toRGBA(palette.plasma, 0.06 * intensity));
         spill.addColorStop(1.0, 'rgba(0,0,0,0)');
         ctx.fillStyle = spill;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        drawFlares(r, tSec, intensity);
+        drawFlares(cx, cy, r, tSec, intensity);
 
         // corona
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        const corona = ctx.createRadialGradient(star.cx, star.cy, r*0.62, star.cx, star.cy, r*1.16);
-        corona.addColorStop(0.0, toRGBA(palette.corona, 0.22 * intensity));
-        corona.addColorStop(0.55, toRGBA(palette.corona, 0.12 * intensity));
+        const corona = ctx.createRadialGradient(cx, cy, r*0.62, cx, cy, r*1.16);
+        corona.addColorStop(0.0, toRGBA(palette.corona, 0.20 * intensity));
+        corona.addColorStop(0.55, toRGBA(palette.corona, 0.10 * intensity));
         corona.addColorStop(1.0, 'rgba(0,0,0,0)');
         ctx.fillStyle = corona;
         ctx.beginPath();
-        ctx.arc(star.cx, star.cy, r*1.16, 0, Math.PI*2);
+        ctx.arc(cx, cy, r*1.16, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
-
-        // golden crown halo
-        if (crownAlpha > 0){
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          const gold = { r: 255, g: 210, b: 120 };
-          const crown = ctx.createRadialGradient(star.cx, star.cy, r*0.78, star.cx, star.cy, r*1.48);
-          crown.addColorStop(0.0, `rgba(${gold.r},${gold.g},${gold.b},0)`);
-          crown.addColorStop(0.35, `rgba(${gold.r},${gold.g},${gold.b},${0.18 * crownAlpha})`);
-          crown.addColorStop(1.0, `rgba(${gold.r},${gold.g},${gold.b},0)`);
-          ctx.fillStyle = crown;
-          ctx.filter = 'blur(2.0px)';
-          ctx.beginPath();
-          ctx.arc(star.cx, star.cy, r*1.52, 0, Math.PI*2);
-          ctx.fill();
-          ctx.restore();
-        }
 
         // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        ctx.translate(star.cx, star.cy);
+        ctx.translate(cx, cy);
         beginShimmerClip(r*0.80, tSec);
 
         const body = ctx.createRadialGradient(0,0, r*0.05, 0,0, r*0.80);
         body.addColorStop(0.0, toRGBA(palette.core, 0.96));
-        body.addColorStop(0.32, toRGBA(palette.core, 0.62 * intensity));
+        body.addColorStop(0.32, toRGBA(palette.core, 0.60 * intensity));
         body.addColorStop(0.58, toRGBA(palette.plasma, 0.28 * intensity));
         body.addColorStop(0.86, toRGBA(palette.corona, 0.14 * intensity));
         body.addColorStop(1.0, 'rgba(0,0,0,0)');
@@ -847,9 +1012,9 @@
 
         // swirls
         ctx.save();
-        ctx.rotate(star.rot);
-        for (let i=0;i<20;i++){
-          const a0 = (i/20) * Math.PI*2;
+        ctx.rotate(0.18*tSec);
+        for (let i=0;i<18;i++){
+          const a0 = (i/18) * Math.PI*2;
           const a1 = a0 + lerp(0.10, 0.34, (Math.sin(tSec*0.8 + i)+1)/2);
           const rr = lerp(r*0.16, r*0.78, (i%6)/5);
           ctx.lineWidth = lerp(2.0, 7.0, (i%5)/4);
@@ -861,11 +1026,11 @@
         ctx.restore();
 
         ctx.save();
-        ctx.rotate(-star.rot*1.65 + star.rot2);
-        for (let i=0;i<13;i++){
-          const a0 = (i/13) * Math.PI*2;
+        ctx.rotate(-0.30*tSec);
+        for (let i=0;i<12;i++){
+          const a0 = (i/12) * Math.PI*2;
           const a1 = a0 + lerp(0.14, 0.44, (Math.cos(tSec*0.65 + i*1.7)+1)/2);
-          const rr = lerp(r*0.20, r*0.76, ((i*7)%13)/12);
+          const rr = lerp(r*0.20, r*0.76, ((i*7)%12)/11);
           ctx.lineWidth = lerp(1.6, 5.6, (i%4)/3);
           ctx.strokeStyle = toRGBA(palette.corona, (0.08 + 0.07*Math.cos(tSec*0.8+i)) * intensity);
           ctx.beginPath();
@@ -875,7 +1040,7 @@
         ctx.restore();
 
         // spark flecks
-        for (let i=0;i<22;i++){
+        for (let i=0;i<20;i++){
           const ang = tSec*0.35 + i*0.62;
           const pr = r * lerp(0.08, 0.70, (Math.sin(i*12.3)+1)/2);
           const px = Math.cos(ang) * pr * 0.55;
@@ -886,7 +1051,7 @@
           ctx.fillStyle = toRGBA(palette.spark, 1);
           ctx.shadowColor = toRGBA(palette.spark, 1);
           ctx.shadowBlur = 12;
-          ctx.globalAlpha = 0.12 * intensity;
+          ctx.globalAlpha = 0.11 * intensity;
           ctx.beginPath();
           ctx.arc(px, py, lerp(0.8, 2.0, (Math.cos(tSec+i)+1)/2), 0, Math.PI*2);
           ctx.fill();
@@ -895,31 +1060,17 @@
 
         ctx.restore();
 
-        // core
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        const core = ctx.createRadialGradient(star.cx, star.cy, r*0.02, star.cx, star.cy, r*0.44);
-        core.addColorStop(0.0, toRGBA(palette.core, 0.98));
-        core.addColorStop(0.18, toRGBA(palette.core, 0.70 * intensity));
-        core.addColorStop(0.55, toRGBA(palette.plasma, 0.18 * intensity));
-        core.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.arc(star.cx, star.cy, r*0.44, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-
-        // highlight
+        // core highlight
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const hl = ctx.createRadialGradient(star.cx - r*0.22, star.cy - r*0.22, r*0.03, star.cx - r*0.22, star.cy - r*0.22, r*0.38);
-        hl.addColorStop(0.0, `rgba(255,255,255,${0.26 * intensity})`);
+        const hl = ctx.createRadialGradient(cx - r*0.22, cy - r*0.22, r*0.03, cx - r*0.22, cy - r*0.22, r*0.38);
+        hl.addColorStop(0.0, `rgba(255,255,255,${0.24 * intensity})`);
         hl.addColorStop(0.45, `rgba(255,255,255,${0.06 * intensity})`);
-        hl.addColorStop(1.0, 'rgba(255,255,255,0)');
+        hl.addColorStop(1.0, `rgba(255,255,255,0)`);
         ctx.fillStyle = hl;
         ctx.filter = 'blur(0.8px)';
         ctx.beginPath();
-        ctx.arc(star.cx - r*0.12, star.cy - r*0.12, r*0.50, 0, Math.PI*2);
+        ctx.arc(cx - r*0.12, cy - r*0.12, r*0.50, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
       }
@@ -974,6 +1125,460 @@
         ctx.restore();
       }
 
+      function drawMoon(mx, my, mr, tSec){
+        // Outer glow
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+
+        const pulse = 0.78 + 0.22*Math.sin(tSec*2.2);
+        const glowR = mr * (2.6 + 0.2*pulse);
+
+        const glow = ctx.createRadialGradient(mx, my, mr*0.20, mx, my, glowR);
+        glow.addColorStop(0.0, 'rgba(255,255,255,0.20)');
+        glow.addColorStop(0.35, 'rgba(255,255,255,0.10)');
+        glow.addColorStop(1.0, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0,0,w,h);
+
+        // Moon body
+        const body = ctx.createRadialGradient(mx - mr*0.22, my - mr*0.22, mr*0.05, mx, my, mr);
+        body.addColorStop(0.0, 'rgba(255,255,255,0.96)');
+        body.addColorStop(0.45, 'rgba(255,255,255,0.75)');
+        body.addColorStop(1.0, 'rgba(255,255,255,0.38)');
+        ctx.fillStyle = body;
+
+        ctx.beginPath();
+        ctx.arc(mx, my, mr, 0, Math.PI*2);
+        ctx.fill();
+
+        // Little craters (soft)
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.globalAlpha = 0.22;
+        for(let i=0;i<6;i++){
+          const a = i*1.2 + tSec*0.15;
+          const rx = mx + Math.cos(a)*mr*0.35;
+          const ry = my + Math.sin(a*1.1)*mr*0.28;
+          ctx.beginPath();
+          ctx.arc(rx, ry, mr*rand(0.06,0.11), 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(220,235,255,1)';
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      // ---------- Level drawing ----------
+      function drawLevel(nowMs){
+        level.t = nowMs * 0.001;
+
+        // Sky gradient
+        const sky = ctx.createLinearGradient(0,0,0,h);
+        sky.addColorStop(0.0, 'rgba(10, 30, 90, 1)');
+        sky.addColorStop(0.55, 'rgba(20, 70, 160, 1)');
+        sky.addColorStop(1.0, 'rgba(140, 210, 255, 1)');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0,0,w,h);
+
+        // Sun-ish glow
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const sun = ctx.createRadialGradient(w*0.18, h*0.16, 0, w*0.18, h*0.16, Math.min(w,h)*0.35);
+        sun.addColorStop(0.0, 'rgba(255, 255, 255, 0.18)');
+        sun.addColorStop(0.5, 'rgba(255, 220, 255, 0.10)');
+        sun.addColorStop(1.0, 'rgba(255,255,255,0)');
+        ctx.fillStyle = sun;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        // Floating clouds (simple)
+        for(let i=0;i<6;i++){
+          const x = (w*0.10 + i*w*0.18 + (level.t*12)*(i%2?1:-1)) % (w + 240) - 120;
+          const y = h*0.12 + (i%3)*h*0.06;
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = 'rgba(255,255,255,1)';
+          ctx.beginPath();
+          ctx.arc(x, y, 34, 0, Math.PI*2);
+          ctx.arc(x+34, y+8, 28, 0, Math.PI*2);
+          ctx.arc(x+64, y, 30, 0, Math.PI*2);
+          ctx.arc(x+34, y-12, 26, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Land / platform area
+        const horizonY = h*0.56;
+        const oceanTop = h*0.68;
+
+        // Land base
+        ctx.save();
+        const landGrad = ctx.createLinearGradient(0, horizonY, 0, oceanTop);
+        landGrad.addColorStop(0.0, 'rgba(70, 255, 170, 1)');
+        landGrad.addColorStop(1.0, 'rgba(0, 185, 255, 1)');
+        ctx.fillStyle = landGrad;
+        ctx.fillRect(0, horizonY, w, oceanTop - horizonY);
+        ctx.restore();
+
+        // Garden + sand "center platform"
+        const platW = w*0.62;
+        const platH = h*0.12;
+        const platX = (w-platW)/2;
+        const platY = h*0.54;
+
+        // Shadow
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = 'rgba(0,0,0,1)';
+        ctx.beginPath();
+        roundRect(platX+10, platY+16, platW-20, platH, 26);
+        ctx.fill();
+        ctx.restore();
+
+        // Platform body (garden rim)
+        ctx.save();
+        ctx.fillStyle = 'rgba(30, 255, 210, 0.95)';
+        ctx.beginPath();
+        roundRect(platX, platY, platW, platH, 28);
+        ctx.fill();
+
+        // Sand center
+        const sandGrad = ctx.createLinearGradient(0, platY, 0, platY+platH);
+        sandGrad.addColorStop(0, 'rgba(255, 234, 170, 0.98)');
+        sandGrad.addColorStop(1, 'rgba(255, 198, 120, 0.98)');
+        ctx.fillStyle = sandGrad;
+        ctx.beginPath();
+        roundRect(platX+16, platY+16, platW-32, platH-28, 22);
+        ctx.fill();
+
+        // Sparkle pixels on sand
+        ctx.globalCompositeOperation = 'screen';
+        for(let i=0;i<24;i++){
+          const px = rand(platX+26, platX+platW-26);
+          const py = rand(platY+26, platY+platH-26);
+          ctx.globalAlpha = rand(0.05, 0.14);
+          ctx.fillStyle = 'rgba(255,255,255,1)';
+          ctx.fillRect(px, py, 2, 2);
+        }
+        ctx.restore();
+
+        // Plants (alive!)
+        for(const p of level.plants){
+          const sway = Math.sin(level.t*p.sway + p.phase) * 0.35;
+          const stemH = p.h;
+          const stemX = p.x;
+          const stemY = p.y;
+
+          ctx.save();
+          ctx.translate(stemX, stemY);
+          ctx.rotate(sway * 0.12);
+          ctx.lineWidth = 5;
+          ctx.lineCap = 'round';
+
+          const stem = p.hue === 'lime' ? 'rgba(40, 255, 160, 0.95)' : 'rgba(0, 230, 255, 0.95)';
+          ctx.strokeStyle = stem;
+          ctx.beginPath();
+          ctx.moveTo(0, 12);
+          ctx.quadraticCurveTo(6, -stemH*0.35, 0, -stemH);
+          ctx.stroke();
+
+          // Leaves
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = 0.18;
+          ctx.fillStyle = 'rgba(255,255,255,1)';
+          ctx.beginPath();
+          ctx.ellipse(-8, -stemH*0.55, 10, 6, -0.3, 0, Math.PI*2);
+          ctx.ellipse( 9, -stemH*0.35, 11, 6,  0.4, 0, Math.PI*2);
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        // Ocean
+        ctx.save();
+        const oceanGrad = ctx.createLinearGradient(0, oceanTop, 0, h);
+        oceanGrad.addColorStop(0.0, 'rgba(0, 160, 255, 1)');
+        oceanGrad.addColorStop(0.6, 'rgba(0, 90, 200, 1)');
+        oceanGrad.addColorStop(1.0, 'rgba(0, 30, 120, 1)');
+        ctx.fillStyle = oceanGrad;
+        ctx.fillRect(0, oceanTop, w, h - oceanTop);
+        ctx.restore();
+
+        // Ocean surface shimmer
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.25;
+        for(let i=0;i<10;i++){
+          const yy = oceanTop + i*10 + Math.sin(level.t*1.2 + i)*4;
+          ctx.fillStyle = 'rgba(255,255,255,1)';
+          ctx.fillRect(0, yy, w, 2);
+        }
+        ctx.restore();
+
+        // Fish (alive!)
+        for(const f of level.fish){
+          f.x += f.sp * (1/60);
+          if (f.x < -60) f.x = w + 60;
+          if (f.x > w + 60) f.x = -60;
+
+          const wig = Math.sin(level.t*2.4 + f.phase) * f.wig;
+          const fx = f.x;
+          const fy = f.y + wig*0.08;
+
+          ctx.save();
+          ctx.translate(fx, fy);
+          const dir = Math.sign(f.sp) || 1;
+          ctx.scale(dir, 1);
+          ctx.scale(f.s, f.s);
+
+          // body
+          ctx.globalCompositeOperation = 'lighter';
+          const c1 = f.hue === 'mint' ? 'rgba(70, 255, 210, 0.80)' : 'rgba(255, 92, 199, 0.70)';
+          const c2 = f.hue === 'mint' ? 'rgba(0, 180, 255, 0.55)' : 'rgba(180, 0, 255, 0.55)';
+          const grad = ctx.createRadialGradient(-6, -4, 2, 0, 0, 22);
+          grad.addColorStop(0, c1);
+          grad.addColorStop(1, c2);
+          ctx.fillStyle = grad;
+
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 20, 11, 0, 0, Math.PI*2);
+          ctx.fill();
+
+          // tail
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          ctx.beginPath();
+          ctx.moveTo(18, 0);
+          ctx.lineTo(32, -10);
+          ctx.lineTo(32,  10);
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(255,255,255,0.22)';
+          ctx.fill();
+          ctx.restore();
+
+          // eye sparkle
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = 'rgba(255,255,255,0.65)';
+          ctx.fillRect(-10, -3, 2, 2);
+
+          ctx.restore();
+        }
+
+        // Crabs (alive!)
+        for(const c of level.crabs){
+          c.x += c.sp * (1/60);
+          if (c.x < -60) c.x = w + 60;
+          if (c.x > w + 60) c.x = -60;
+
+          const bob = Math.sin(level.t*6 + c.phase) * 1.2;
+
+          ctx.save();
+          ctx.translate(c.x, c.y + bob);
+          ctx.scale(c.s, c.s);
+
+          // body
+          ctx.globalCompositeOperation = 'lighter';
+          const body = ctx.createRadialGradient(0, -4, 2, 0, 0, 26);
+          body.addColorStop(0, 'rgba(255, 120, 160, 0.75)');
+          body.addColorStop(1, 'rgba(255, 210, 120, 0.55)');
+          ctx.fillStyle = body;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 18, 12, 0, 0, Math.PI*2);
+          ctx.fill();
+
+          // legs (tiny)
+          ctx.globalAlpha = 0.55;
+          ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+          ctx.lineWidth = 3;
+          for(let i=-2;i<=2;i++){
+            ctx.beginPath();
+            ctx.moveTo(i*6, 8);
+            ctx.lineTo(i*8, 16);
+            ctx.stroke();
+          }
+
+          // claws
+          ctx.globalAlpha = 0.8;
+          ctx.fillStyle = 'rgba(255,255,255,0.22)';
+          ctx.beginPath();
+          ctx.ellipse(-20, -2, 8, 6, -0.3, 0, Math.PI*2);
+          ctx.ellipse( 20, -2, 8, 6,  0.3, 0, Math.PI*2);
+          ctx.fill();
+
+          // eyes
+          ctx.globalCompositeOperation = 'screen';
+          ctx.fillStyle = 'rgba(255,255,255,0.65)';
+          ctx.fillRect(-6, -8, 2, 2);
+          ctx.fillRect( 4, -8, 2, 2);
+
+          ctx.restore();
+        }
+
+        // Birds (alive!)
+        for(const b of level.birds){
+          b.x += b.sp * (1/60);
+          if (b.x > w + 80) b.x = -80;
+
+          const bob = Math.sin(level.t*1.7 + b.phase) * b.bob;
+          const flap = Math.sin(level.t*(6*b.flap) + b.phase);
+
+          ctx.save();
+          ctx.translate(b.x, b.y + bob*0.06);
+          ctx.scale(b.s, b.s);
+
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = 0.55;
+
+          // wing strokes
+          ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+          ctx.lineWidth = 3.2;
+          ctx.lineCap = 'round';
+
+          const wing = 12 + flap*6;
+          ctx.beginPath();
+          ctx.moveTo(0,0);
+          ctx.quadraticCurveTo(wing, -wing*0.65, wing*1.6, 0);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(0,0);
+          ctx.quadraticCurveTo(-wing, -wing*0.65, -wing*1.6, 0);
+          ctx.stroke();
+
+          // body dot
+          ctx.globalAlpha = 0.35;
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.beginPath();
+          ctx.arc(0, 2, 2.2, 0, Math.PI*2);
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        // Little title HUD
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = 'rgba(255,255,255,1)';
+        ctx.fillRect(16, 16, 190, 34);
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = 'rgba(10, 24, 58, 0.65)';
+        ctx.fillRect(18, 18, 186, 30);
+
+        ctx.globalAlpha = 0.95;
+        ctx.fillStyle = 'rgba(244,248,255,0.92)';
+        ctx.font = '12px "Press Start 2P", ui-monospace';
+        ctx.fillText('BOO PLANET', 28, 40);
+        ctx.restore();
+      }
+
+      function roundRect(x,y,wid,hei,rad){
+        const r = Math.min(rad, wid/2, hei/2);
+        ctx.moveTo(x+r, y);
+        ctx.arcTo(x+wid, y, x+wid, y+hei, r);
+        ctx.arcTo(x+wid, y+hei, x, y+hei, r);
+        ctx.arcTo(x, y+hei, x, y, r);
+        ctx.arcTo(x, y, x+wid, y, r);
+      }
+
+      // ---------- UI / Screens ----------
+      async function startMusic(){
+        try{
+          if (bgm && bgm.paused){
+            bgm.volume = 0.45;
+            await bgm.play();
+          }
+        }catch(_e){}
+      }
+
+      function setScreen(which){
+        welcome.classList.toggle('active', which === 'welcome');
+        play.classList.toggle('active', which === 'play');
+      }
+
+      function setVisitButtons(){
+        // Space button: only when playing, only in space scene, not mid-zoom
+        const showSpace = allowInput && (scene === SCENE.SPACE) && !camera.active;
+        visitBtnSpace.classList.toggle('isVisible', showSpace);
+
+        // Planet button: only when in Boo Planet scene AND planet was tapped
+        const showPlanet = allowInput && (scene === SCENE.BOO_PLANET) && booPlanet.showVisit && !camera.active;
+        visitBtnPlanet.classList.toggle('isVisible', showPlanet);
+      }
+
+      startBtn.addEventListener('click', async () => {
+        await startMusic();
+        setScreen('play');
+        pressToPlay.style.display = 'block';
+        allowInput = true;
+
+        // Hide start button (in case of overlay)
+        startBtn.classList.add('isHidden');
+
+        // Start in space; show CTA
+        scene = SCENE.SPACE;
+        camera.zoom = 1;
+        booPlanet.showVisit = false;
+        setVisitButtons();
+
+        showToast("Tap the star.\nDrag the satellites.\nOr… visit Boo Planet ✨", 2600);
+      });
+
+      // ---------- Transitions ----------
+      function goToBooPlanetTitle(){
+        scene = SCENE.ZOOM_TO_PLANET_TITLE;
+        booPlanet.showVisit = false;
+        setVisitButtons();
+
+        // Zoom into the central star (visual swell ~ 5×)
+        pickNewPalette(performance.now());
+        startCameraZoom(5.0, 1300);
+      }
+
+      function enterBooPlanetScene(){
+        scene = SCENE.BOO_PLANET;
+        booPlanet.scale = 1;
+        booPlanet.titleAlpha = 1;
+        booPlanet.showVisit = false;
+
+        // Reset moon orbit to a pleasing start
+        moon.angle = -Math.PI * 0.25;
+        moonFactIndex = 0;
+
+        setVisitButtons();
+        showToast("Boo Planet", 1800);
+      }
+
+      function goToLevel(){
+        scene = SCENE.ZOOM_TO_LEVEL;
+        booPlanet.showVisit = false;
+        setVisitButtons();
+
+        // Zoom into planet (visual swell ~ 5×)
+        pickNewPalette(performance.now());
+        startCameraZoom(5.0, 1300);
+      }
+
+      function enterLevel(){
+        scene = SCENE.LEVEL;
+        camera.zoom = 1;
+
+        if (!level.initialized) initLevel();
+        setVisitButtons();
+        showToast("Welcome to Boo Planet 🌿🌊🕊️", 2200);
+      }
+
+      visitBtnSpace.addEventListener('click', () => {
+        if (!allowInput) return;
+        if (scene !== SCENE.SPACE) return;
+        goToBooPlanetTitle();
+      });
+
+      visitBtnPlanet.addEventListener('click', () => {
+        if (!allowInput) return;
+        if (scene !== SCENE.BOO_PLANET) return;
+        goToLevel();
+      });
+
       // ---------- Input ----------
       canvas.addEventListener('pointerdown', (e) => {
         if (!allowInput) return;
@@ -983,34 +1588,69 @@
         const y = (e.clientY - rect.top);
         const now = performance.now();
 
-        const idx = hitSatellite(x,y);
-        if (idx !== -1){
-          const s = satellites[idx];
+        // Prevent interaction during zoom transitions
+        if (camera.active) return;
 
-          // Satellite interaction:
-          startSatelliteSwell(s, now);
+        // SPACE input
+        if (scene === SCENE.SPACE){
+          const idx = hitSatellite(x,y);
+          if (idx !== -1){
+            const s = satellites[idx];
+            startSatelliteSwell(s, now);
+            playUniverseMessage();
 
-          // Show a calm universe message (only if none currently playing)
-          playUniverseMessage();
+            drag.active = true;
+            drag.satIndex = idx;
+            drag.pointerId = e.pointerId;
+            s.dragging = true;
 
-          // Dragging
-          drag.active = true;
-          drag.satIndex = idx;
-          drag.pointerId = e.pointerId;
-          s.dragging = true;
+            s.x = x; s.y = y;
+            canvas.setPointerCapture?.(e.pointerId);
+            return;
+          }
 
-          s.x = x; s.y = y;
-          canvas.setPointerCapture?.(e.pointerId);
+          if (inMainStarHit(x,y)){
+            startMainBloom(now);
+            return;
+          }
+
           return;
         }
 
-        if (inMainStarHit(x,y)){
-          startMainBloom(now);
+        // BOO PLANET input
+        if (scene === SCENE.BOO_PLANET){
+          const mpos = moonPosition();
+          const moonHit = hitCircle(x,y, mpos.x, mpos.y, moon.rBase*1.25);
+          const planetHit = hitCircle(x,y, booPlanet.cx, booPlanet.cy, booPlanet.rBase*1.25);
+
+          if (moonHit){
+            const fact = MOON_FACTS[moonFactIndex % MOON_FACTS.length];
+            moonFactIndex++;
+            showToast(fact, 2600);
+            // tiny palette tick for delight
+            pickNewPalette(now);
+            return;
+          }
+
+          if (planetHit){
+            booPlanet.showVisit = true;
+            setVisitButtons();
+            showToast("Tap “Visit Boo Planet” to land.", 2000);
+            return;
+          }
+
+          // tap elsewhere hides the planet CTA
+          booPlanet.showVisit = false;
+          setVisitButtons();
+          return;
         }
+
+        // LEVEL scene: no required taps (just alive ambience)
       }, { passive:false });
 
       canvas.addEventListener('pointermove', (e) => {
         if (!allowInput) return;
+        if (scene !== SCENE.SPACE) return;
         if (!drag.active) return;
         if (drag.pointerId !== e.pointerId) return;
 
@@ -1042,58 +1682,190 @@
       canvas.addEventListener('pointerup', endDrag, { passive:true });
       canvas.addEventListener('pointercancel', endDrag, { passive:true });
 
-      // ---------- Welcome / Start ----------
-      async function startMusic(){
-        try{
-          if (bgm && bgm.paused){
-            bgm.volume = 0.45;
-            await bgm.play();
-          }
-        }catch(_e){}
-      }
-
-      function setScreen(which){
-        welcome.classList.toggle('active', which === 'welcome');
-        play.classList.toggle('active', which === 'play');
-      }
-
-      startBtn.addEventListener('click', async () => {
-        await startMusic();
-        setScreen('play');
-        pressToPlay.style.display = 'block';
-        allowInput = true;
-      });
-
       // ---------- Animation loop ----------
+      let lastMs = performance.now();
+
       function tick(nowMs){
         const dt = (nowMs - lastMs) * 0.001;
         lastMs = nowMs;
         const tSec = nowMs * 0.001;
 
-        star.rot  += dt * 0.18;
-        star.rot2 += dt * 0.11;
-
         updatePalette(nowMs);
-        updateMainBloom(nowMs);
 
-        updateSatellitePositions(dt);
-        for (const s of satellites) updateSatelliteSwell(s, nowMs);
+        // Camera updates (used during zoom transitions)
+        updateCamera(nowMs);
 
-        drawBackground(tSec);
+        // Keep buttons accurate
+        setVisitButtons();
 
-        // satellites behind star
-        for (const s of satellites) drawSatellite(s);
+        // Scene renders
+        if (scene === SCENE.SPACE){
+          star.rot  += dt * 0.18;
+          star.rot2 += dt * 0.11;
 
-        // star
-        drawMainStar(tSec, nowMs);
+          updateMainBloom(nowMs);
+          updateSatellitePositions(dt);
+          for (const s of satellites) updateSatelliteSwell(s, nowMs);
+
+          drawBackgroundSpace(tSec);
+
+          // Apply zoom around star center if active/used (camera.zoom)
+          ctx.save();
+          ctx.translate(star.cx, star.cy);
+          ctx.scale(camera.zoom, camera.zoom);
+          ctx.translate(-star.cx, -star.cy);
+
+          // satellites behind star
+          for (const s of satellites) drawSatellite(s);
+
+          // star (also swells a bit if we are zooming to title)
+          const extraScale = camera.active ? lerp(1, 1.08, clamp((camera.zoom-1)/4, 0, 1)) : 1;
+          const prevScale = star.scale;
+          star.scale = prevScale * extraScale;
+
+          drawOrb(star.cx, star.cy, star.rBase, star.scale, tSec, nowMs, star.intensity);
+
+          star.scale = prevScale;
+
+          ctx.restore();
+
+          // Transition completion: space → Boo Planet title
+          if (!camera.active && scene === SCENE.ZOOM_TO_PLANET_TITLE){
+            // (won't happen here)
+          }
+        }
+
+        // Zooming from SPACE into Boo Planet title
+        if (scene === SCENE.ZOOM_TO_PLANET_TITLE){
+          // Render like space, but with strong zoom; once complete, switch to Boo Planet scene.
+          star.rot  += dt * 0.18;
+          star.rot2 += dt * 0.11;
+
+          updateMainBloom(nowMs);
+          updateSatellitePositions(dt);
+          for (const s of satellites) updateSatelliteSwell(s, nowMs);
+
+          drawBackgroundSpace(tSec);
+
+          ctx.save();
+          ctx.translate(star.cx, star.cy);
+          ctx.scale(camera.zoom, camera.zoom);
+          ctx.translate(-star.cx, -star.cy);
+
+          for (const s of satellites) drawSatellite(s);
+
+          // Force star to appear like it is the "portal" — swell towards 5× via camera
+          const portalScale = 1 + 0.06 * Math.sin(tSec*2.2);
+          drawOrb(star.cx, star.cy, star.rBase, star.scale*portalScale, tSec, nowMs, star.intensity*1.05);
+
+          ctx.restore();
+
+          // Once zoom is done, snap to Boo Planet scene
+          if (!camera.active){
+            camera.zoom = 1;
+            enterBooPlanetScene();
+          }
+        }
+
+        // Boo Planet scene
+        if (scene === SCENE.BOO_PLANET){
+          drawBackgroundSpace(tSec);
+
+          // Gentle title fade
+          booPlanet.titleAlpha = clamp(booPlanet.titleAlpha - dt*0.25, 0, 1);
+
+          // Moon orbit
+          moon.angle += moon.omega * dt;
+          moon.glowPulse = 0.5 + 0.5*Math.sin(tSec*2.0);
+
+          // Render "planet and moon" with a slight camera zoom bounce (subtle, not huge)
+          const bounce = 1 + 0.012*Math.sin(tSec*2*Math.PI/6.8);
+          const planetScale = bounce;
+
+          // Planet orb
+          drawOrb(booPlanet.cx, booPlanet.cy, booPlanet.rBase, planetScale, tSec, nowMs, 1.05);
+
+          // Moon
+          const mp = moonPosition();
+          drawMoon(mp.x, mp.y, moon.rBase * (1 + 0.04*moon.glowPulse), tSec);
+
+          // Orbit line (very subtle)
+          ctx.save();
+          ctx.globalAlpha = 0.09;
+          ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(booPlanet.cx, booPlanet.cy, moon.orbitR, moon.orbitR*0.72, 0, 0, Math.PI*2);
+          ctx.stroke();
+          ctx.restore();
+
+          // Big title "Boo Planet" after zoom
+          ctx.save();
+          const a = 0.92 - booPlanet.titleAlpha*0.6;
+          ctx.globalAlpha = clamp(a, 0, 1);
+          ctx.fillStyle = 'rgba(244,248,255,0.92)';
+          ctx.textAlign = 'center';
+          ctx.font = `clamp(18px, 3.2vw, 30px) "Press Start 2P", ui-monospace`;
+          ctx.shadowColor = 'rgba(255,255,255,0.18)';
+          ctx.shadowBlur = 18;
+          ctx.fillText("Boo Planet", w*0.5, h*0.14);
+          ctx.restore();
+
+          // Helper hint (subtle)
+          ctx.save();
+          ctx.globalAlpha = 0.52;
+          ctx.fillStyle = 'rgba(214,230,255,0.92)';
+          ctx.textAlign = 'center';
+          ctx.font = `12px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+          ctx.fillText("Tap the moon for moon facts. Tap Boo Planet to land.", w*0.5, h*0.19);
+          ctx.restore();
+        }
+
+        // Zooming into level from Boo Planet
+        if (scene === SCENE.ZOOM_TO_LEVEL){
+          drawBackgroundSpace(tSec);
+
+          // Moon orbit continues during zoom
+          moon.angle += moon.omega * dt;
+
+          // Apply zoom around planet
+          ctx.save();
+          ctx.translate(booPlanet.cx, booPlanet.cy);
+          ctx.scale(camera.zoom, camera.zoom);
+          ctx.translate(-booPlanet.cx, -booPlanet.cy);
+
+          drawOrb(booPlanet.cx, booPlanet.cy, booPlanet.rBase, 1.02, tSec, nowMs, 1.15);
+          const mp = moonPosition();
+          drawMoon(mp.x, mp.y, moon.rBase*1.02, tSec);
+
+          ctx.restore();
+
+          if (!camera.active){
+            enterLevel();
+          }
+        }
+
+        // Level scene
+        if (scene === SCENE.LEVEL){
+          drawLevel(nowMs);
+        }
 
         requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
 
-      // Safety
+      // ---------- Initial UI state ----------
+      // Hide visit buttons until playing.
+      visitBtnSpace.classList.remove('isVisible');
+      visitBtnPlanet.classList.remove('isVisible');
+
+      // ---------- Safety ----------
       document.addEventListener('visibilitychange', () => {
         if (document.hidden){
+          // reset transient zooms
+          camera.active = false;
+          camera.zoom = 1;
+
           star.state = 'idle';
           star.scale = 1;
           star.intensity = 1;
@@ -1108,12 +1880,37 @@
           drag.satIndex = -1;
           drag.pointerId = null;
 
-          // stop any playing message cleanly
+          // stop messages cleanly
           messagePlaying = false;
           clearMessageTimers();
           hideMessage();
+
+          // hide CTAs until resume
+          booPlanet.showVisit = false;
+          setVisitButtons();
         }
       });
+
+      // ---------- Boot: keep CTA hidden until START ----------
+      setVisitButtons();
+
+      // ---------- Space CTA: becomes visible only after START ----------
+      // Make it feel "present" but not distracting:
+      // We'll show it when play begins.
+      function onPlayStart(){
+        setVisitButtons();
+      }
+
+      // Patch: show the space CTA once START is tapped
+      // (small delay to avoid competing with initial toast)
+      startBtn.addEventListener('click', () => setTimeout(onPlayStart, 450));
+
+      // Also: when the user clicks Visit Boo Planet from SPACE, move to zoom scene
+      visitBtnSpace.addEventListener('click', () => {
+        if (scene !== SCENE.SPACE) return;
+        goToBooPlanetTitle();
+      });
+
     })();
   </script>
 </body>
