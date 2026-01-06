@@ -649,7 +649,7 @@
             // orbital path (gentle revolving)
             orbitA: a,
             orbitR: orbitR,
-            orbitOmega: rand(0.08, 0.14) * (Math.random()<0.5 ? 1 : -1), // period ~45–78s
+            orbitOmega: rand(0.045, 0.07) * (Math.random()<0.5 ? 1 : -1), // period ~45–78s
 
             // float + flicker
             wob: rand(0, Math.PI*2),
@@ -983,12 +983,12 @@
           const dx = (tx + wx) - p.x;
           const dy = (ty + wy) - p.y;
 
-          const spring = 0.55;      // strength of orbit follow
+          const spring = 0.85;      // strength of orbit follow
           const accelX = dx * spring;
           const accelY = dy * spring;
 
           // subtle autonomous drift (keeps it alive)
-          const drift = 18;
+          const drift = 6;
           const noiseX = Math.sin(p.wob*1.7 + p.id*2.1) * drift;
           const noiseY = Math.cos(p.wob*1.4 + p.id*1.6) * (drift * 0.8);
 
@@ -1008,7 +1008,7 @@
           p.y += p.vy * dt;
 
           // damping (less sticky than before)
-          const damp = Math.pow(0.986, dt*60);
+          const damp = Math.pow(0.979, dt*60);
           p.vx *= damp;
           p.vy *= damp;
 
