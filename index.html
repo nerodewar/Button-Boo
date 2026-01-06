@@ -648,7 +648,7 @@
         // nice-ish distribution: ring-ish but not orbiting; then jitter
         const cx = w * 0.5;
         const cy = h * 0.44;
-        const ringRx = clamp(Math.min(w,h) * 0.30, 180, 420);
+        const ringRx = clamp(Math.min(w,h) * 0.42, 180, 420);
         const ringRy = ringRx * 0.72;
 
         for (let i=0;i<LANTERN_COUNT;i++){
@@ -674,7 +674,7 @@
             // visuals
             r: rand(18, 26),
             rot: rand(0, Math.PI*2),
-            rotSp: rand(-0.55, 0.55),
+            rotSp: 0,
 
             // gentle floating
             wob: rand(0, Math.PI*2),
@@ -1032,7 +1032,7 @@
           p.vy *= damp;
 
           // rotation (gentle)
-          p.rot += p.rotSp * dt;
+         p.rot = 0;
 
           // keep within bounds by nudging anchors (so the whole float pattern stays natural)
           if (p.x < minX){ p.x = minX; p.vx *= -0.25; p.ax += 10; }
