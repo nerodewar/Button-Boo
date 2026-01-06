@@ -407,9 +407,9 @@
         if (scene === 'lantern'){
           ctx.save();
           ctx.globalCompositeOperation = 'screen';
-          const sky = ctx.createRadialGradient(w*0.5, h*0.30, 0, w*0.5, h*0.38, Math.min(w,h)*0.85);
-          sky.addColorStop(0.0, 'rgba(255,190,120,0.06)');
-          sky.addColorStop(0.55, 'rgba(255,160,90,0.03)');
+          const sky = ctx.createRadialGradient(w*0.5, h*0.30, 0, w*0.5, h*0.38, Math.min(w,h)*0.90);
+          sky.addColorStop(0.0, 'rgba(255,210,150,0.09)');
+          sky.addColorStop(0.42,'rgba(255,175,110,0.045)');
           sky.addColorStop(1.0, 'rgba(0,0,0,0)');
           ctx.fillStyle = sky;
           ctx.fillRect(0,0,w,h);
@@ -558,6 +558,14 @@
       let holidayOrder = [];
       let holidayPtr = 0;
 
+      // ✅ NEW: Lantern Sky "Moon" (centerpiece)
+      const lanternMoon = {
+        x: 0, y: 0,
+        rBase: 120,
+        glow: 0,
+        rot: 0
+      };
+
       const VIVID_COLORS = [
         { name:"Vivid Orange",  ember:{r:255,g:120,b:30},  honey:{r:255,g:180,b:90},  cream:{r:255,g:245,b:230}, rim:{r:255,g:95,b:20} },
         { name:"Sky Blue",      ember:{r:80, g:200,b:255}, honey:{r:150,g:235,b:255}, cream:{r:235,g:252,b:255}, rim:{r:40, g:140,b:255} },
@@ -592,6 +600,11 @@
         booPlanet.cx = w * 0.5;
         booPlanet.cy = h * 0.46;
         booPlanet.rBase = clamp(minDim * 0.175, 100, 210);
+
+        // ✅ NEW: lantern moon center + scale
+        lanternMoon.x = w * 0.5;
+        lanternMoon.y = h * 0.45;
+        lanternMoon.rBase = clamp(minDim * 0.165, 92, 170);
       }
 
       function resize(){
@@ -639,22 +652,25 @@
         if (lanterns.length && !force) return;
         lanterns.length = 0;
 
-        // spread lanterns like a sky cluster (upper-mid)
-        const topBand = h * 0.18;
-        const bottomBand = h * 0.70;
-        const leftBand = w * 0.12;
-        const rightBand = w * 0.88;
+        // ✅ NEW: lanterns orbit around a center moon (elliptical ring)
+        const cx = lanternMoon.x;
+        const cy = lanternMoon.y;
 
-        // nice-ish distribution: ring-ish but not orbiting; then jitter
-        const cx = w * 0.5;
-        const cy = h * 0.44;
-        const ringRx = clamp(Math.min(w,h) * 0.42, 180, 420);
+        const ringRx = clamp(Math.min(w,h) * 0.40, 190, 460);
         const ringRy = ringRx * 0.72;
 
         for (let i=0;i<LANTERN_COUNT;i++){
-          const a = (i/LANTERN_COUNT) * Math.PI*2 + rand(-0.22, 0.22);
-          let ax = cx + Math.cos(a) * ringRx + rand(-30, 30);
-          let ay = cy + Math.sin(a) * ringRy + rand(-28, 28);
+          const a = (i/LANTERN_COUNT) * Math.PI*2 + rand(-0.18, 0.18);
+
+          // anchor point (where it “belongs” on the ring) + jitter
+          let ax = cx + Math.cos(a) * ringRx + rand(-22, 22);
+          let ay = cy + Math.sin(a) * ringRy + rand(-18, 18);
+
+          // keep within a pleasing band
+          const leftBand = w * 0.08;
+          const rightBand = w * 0.92;
+          const topBand = h * 0.12;
+          const bottomBand = h * 0.84;
 
           ax = clamp(ax, leftBand, rightBand);
           ay = clamp(ay, topBand, bottomBand);
@@ -662,31 +678,37 @@
           lanterns.push({
             id: i,
 
-            // anchor point (where it “belongs” in the sky)
+            // anchor point on ring
             ax, ay,
+
+            // orbit params (lanterns hover around the moon)
+            ang: a,
+            omega: rand(0.08, 0.16) * (Math.random() < 0.5 ? 1 : -1),
+            orbitR: ringRx * rand(0.92, 1.06),
+            orbitRy: ringRy * rand(0.92, 1.06),
+            orbitJ: rand(0.00, Math.PI*2),
 
             // current position + velocity
             x: ax + rand(-10,10),
             y: ay + rand(-10,10),
-            vx: rand(-10,10),
-            vy: rand(-8,8),
+            vx: rand(-6,6),
+            vy: rand(-6,6),
 
             // visuals
             r: rand(18, 26),
             rot: rand(0, Math.PI*2),
-            rotSp: 0,
 
             // gentle floating
             wob: rand(0, Math.PI*2),
             wobSp: rand(0.45, 0.95),
-            drift: rand(3, 7),      // float radius around anchor
-            bob: rand(2, 7),        // vertical bob
+            drift: rand(2, 6),
+            bob: rand(2, 7),
 
             // candle flicker phase
             flick: rand(0, Math.PI*2),
 
             // color state
-            mode: 'cozy',            // 'cozy' or 'vivid'
+            mode: 'cozy',
             vividIndex: (Math.random() * VIVID_COLORS.length) | 0,
 
             glow: 0
@@ -875,6 +897,111 @@
         ctx.restore();
       }
 
+      // ✅ NEW: Lantern Sky Moon drawing (moon-like celestial body)
+      function drawLanternMoon(tSec){
+        const r = lanternMoon.rBase * (1 + 0.012*Math.sin(tSec*0.9));
+        const gPulse = 0.50 + 0.50*Math.sin(tSec*0.55);
+        const glow = 0.45 + 0.45*gPulse + 0.55*lanternMoon.glow;
+
+        // big soft spill
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const spill = ctx.createRadialGradient(lanternMoon.x, lanternMoon.y, r*0.20, lanternMoon.x, lanternMoon.y, r*3.25);
+        spill.addColorStop(0.0, `rgba(255,230,200,${0.10*glow})`);
+        spill.addColorStop(0.45,`rgba(255,200,160,${0.06*glow})`);
+        spill.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = spill;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        // moon body (soft shading + subtle terminator)
+        ctx.save();
+        ctx.translate(lanternMoon.x, lanternMoon.y);
+
+        // faint atmospheric rim
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const rim = ctx.createRadialGradient(0,0, r*0.72, 0,0, r*1.18);
+        rim.addColorStop(0.0, 'rgba(255,255,255,0.00)');
+        rim.addColorStop(0.45,'rgba(255,255,255,0.06)');
+        rim.addColorStop(1.0, 'rgba(255,210,170,0.16)');
+        ctx.fillStyle = rim;
+        ctx.beginPath();
+        ctx.arc(0,0,r*1.18,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // main disk
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const disk = ctx.createRadialGradient(-r*0.20, -r*0.18, r*0.10, 0,0,r*1.05);
+        disk.addColorStop(0.0, `rgba(255,252,248,${0.98})`);
+        disk.addColorStop(0.38,`rgba(245,238,228,${0.86})`);
+        disk.addColorStop(0.72,`rgba(220,210,200,${0.46})`);
+        disk.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = disk;
+        ctx.beginPath();
+        ctx.arc(0,0,r,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // terminator / shading (gives it “moon” depth)
+        ctx.save();
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.globalAlpha = 0.55;
+        const shade = ctx.createRadialGradient(r*0.35, 0, r*0.10, r*0.55, 0, r*1.25);
+        shade.addColorStop(0.0, 'rgba(0,0,0,0.00)');
+        shade.addColorStop(0.35,'rgba(0,0,0,0.18)');
+        shade.addColorStop(1.0, 'rgba(0,0,0,0.52)');
+        ctx.fillStyle = shade;
+        ctx.beginPath();
+        ctx.arc(0,0,r,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // craters (subtle, aesthetic)
+        ctx.save();
+        ctx.globalCompositeOperation = 'overlay';
+        ctx.globalAlpha = 0.22;
+        lanternMoon.rot += 0.012; // super slow drift
+        ctx.rotate(Math.sin(tSec*0.06)*0.12 + lanternMoon.rot*0.01);
+
+        function crater(cx, cy, rr, a){
+          const c = ctx.createRadialGradient(cx, cy, rr*0.15, cx, cy, rr);
+          c.addColorStop(0.0, `rgba(255,255,255,${0.20*a})`);
+          c.addColorStop(0.55,`rgba(120,110,105,${0.18*a})`);
+          c.addColorStop(1.0, `rgba(0,0,0,0)`);
+          ctx.fillStyle = c;
+          ctx.beginPath();
+          ctx.arc(cx,cy,rr,0,Math.PI*2);
+          ctx.fill();
+        }
+        crater(-r*0.22, -r*0.08, r*0.18, 1.0);
+        crater( r*0.15,  r*0.12, r*0.12, 0.9);
+        crater(-r*0.05,  r*0.28, r*0.10, 0.8);
+        crater( r*0.02, -r*0.30, r*0.08, 0.7);
+        crater( r*0.28, -r*0.12, r*0.07, 0.7);
+        ctx.restore();
+
+        // tiny star sparkles near the moon (adds “magic”)
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.16 + 0.10*Math.sin(tSec*0.8);
+        for (let i=0;i<12;i++){
+          const a = tSec*0.35 + i*0.65;
+          const pr = r * rand(1.25, 2.10);
+          const px = Math.cos(a) * pr;
+          const py = Math.sin(a*1.06) * pr*0.82;
+          ctx.fillStyle = 'rgba(255,255,255,0.85)';
+          ctx.beginPath();
+          ctx.arc(px, py, rand(0.8, 1.8), 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.restore();
+      }
+
       // ---------- Satellites ----------
       function drawSatellite(s){
         const rr = s.rBase * s.scale;
@@ -987,9 +1114,13 @@
         ctx.restore();
       }
 
-      // ---------- Lantern motion (floating in sky; no orbit target) ----------
+      // ✅ NEW: update lantern moon (subtle glow decay)
+      function updateLanternMoon(dt){
+        lanternMoon.glow = Math.max(0, lanternMoon.glow - dt * 0.55);
+      }
+
+      // ---------- Lantern motion (orbiting the lantern moon + gentle float) ----------
       function updateLanterns(dt, tSec){
-        // soft bounds (keep them in view)
         const padX = 26;
         const padTop = 18;
         const padBottom = 26;
@@ -997,57 +1128,62 @@
         const minX = padX;
         const maxX = w - padX;
         const minY = h*0.10 + padTop;
-        const maxY = h*0.82 - padBottom;
+        const maxY = h*0.86 - padBottom;
 
-        // each lantern floats around its anchor + very gentle “wind”
+        const cx = lanternMoon.x;
+        const cy = lanternMoon.y;
+
         for (const p of lanterns){
           p.wob += p.wobSp * dt;
           p.flick += (1.6 + p.wobSp) * dt;
 
-          // desired offset around anchor
-          const ox = Math.sin(p.wob + p.id*0.7) * p.drift + Math.cos(p.wob*0.63) * (p.drift*0.55);
-          const oy = Math.cos(p.wob*1.12 + p.id*0.4) * p.bob;
+          // orbit target around the moon (hover ring)
+          p.ang += p.omega * dt;
+          p.orbitJ += dt * 0.22;
 
-          // very gentle “wind” (global)
-          const windX = Math.sin(tSec*0.18) * 6 + Math.cos(tSec*0.11) * 4;
-          const windY = Math.cos(tSec*0.16) * 3;
+          const ringBreath = 1 + 0.020*Math.sin(tSec*0.35 + p.id*0.7);
+          const oxOrbit = Math.cos(p.ang) * p.orbitR * ringBreath;
+          const oyOrbit = Math.sin(p.ang) * p.orbitRy * ringBreath;
 
-          const tx = p.ax + ox + windX;
-          const ty = p.ay + oy + windY;
+          // add tiny "hover" wobble
+          const oxHover = Math.sin(p.wob + p.id*0.7) * p.drift + Math.cos(p.wob*0.63) * (p.drift*0.55);
+          const oyHover = Math.cos(p.wob*1.12 + p.id*0.4) * p.bob;
 
-          // soft spring toward target (smooth float, no bumbling)
+          // gentle wind
+          const windX = Math.sin(tSec*0.18) * 5 + Math.cos(tSec*0.11) * 3;
+          const windY = Math.cos(tSec*0.16) * 2.5;
+
+          const tx = cx + oxOrbit + oxHover + windX;
+          const ty = cy + oyOrbit + oyHover + windY;
+
+          // spring toward target
           const dx = tx - p.x;
           const dy = ty - p.y;
-          const spring = 0.80; // higher = smoother tracking with less driftiness
+          const spring = 0.95;
           p.vx += dx * spring * dt;
           p.vy += dy * spring * dt;
 
-          // integrate
           p.x += p.vx * dt;
           p.y += p.vy * dt;
 
-          // damping
           const damp = Math.pow(0.982, dt*60);
           p.vx *= damp;
           p.vy *= damp;
 
-          // rotation (gentle)
-         p.rot = 0;
+          // keep rotation calm
+          p.rot = 0;
 
-          // keep within bounds by nudging anchors (so the whole float pattern stays natural)
-          if (p.x < minX){ p.x = minX; p.vx *= -0.25; p.ax += 10; }
-          if (p.x > maxX){ p.x = maxX; p.vx *= -0.25; p.ax -= 10; }
-          if (p.y < minY){ p.y = minY; p.vy *= -0.25; p.ay += 10; }
-          if (p.y > maxY){ p.y = maxY; p.vy *= -0.25; p.ay -= 10; }
-
-          p.ax = clamp(p.ax, minX+20, maxX-20);
-          p.ay = clamp(p.ay, minY+20, maxY-20);
+          // bounds safety
+          if (p.x < minX){ p.x = minX; p.vx *= -0.25; }
+          if (p.x > maxX){ p.x = maxX; p.vx *= -0.25; }
+          if (p.y < minY){ p.y = minY; p.vy *= -0.25; }
+          if (p.y > maxY){ p.y = maxY; p.vy *= -0.25; }
 
           // glow decay
           p.glow = Math.max(0, p.glow - dt * 0.85);
         }
 
-        // soft collisions (occasional bumps, not constant)
+        // soft collisions (still allowed; makes it feel alive)
         for (let i=0;i<lanterns.length;i++){
           for (let j=i+1;j<lanterns.length;j++){
             const a = lanterns[i], b = lanterns[j];
@@ -1066,7 +1202,6 @@
               b.x += nx * overlap * 0.5;
               b.y += ny * overlap * 0.5;
 
-              // tiny impulse
               const relVx = b.vx - a.vx;
               const relVy = b.vy - a.vy;
               const relN = relVx*nx + relVy*ny;
@@ -1378,6 +1513,7 @@
 
         moon.glow = 0;
         for (const p of lanterns) p.glow = 0;
+        lanternMoon.glow = 0;
 
         if (scene === 'planet'){
           showOneShot("Welcome to Boo Planet.\nTap the moon for moon facts.\nDouble tap Boo Planet to visit the Lantern Sky.", 7000);
@@ -1404,6 +1540,24 @@
         const now = performance.now();
 
         if (scene === 'lantern'){
+          // ✅ NEW: tap the moon centerpiece for a gentle glow pulse (no extra UI text)
+          if (inHitCircle(x,y,lanternMoon.x,lanternMoon.y,lanternMoon.rBase*0.92)){
+            lanternMoon.glow = 1;
+            // nudge nearby lanterns slightly outward for a “breath”
+            for (const p of lanterns){
+              const dx = p.x - lanternMoon.x;
+              const dy = p.y - lanternMoon.y;
+              const d = Math.max(1, Math.sqrt(dx*dx + dy*dy));
+              if (d < lanternMoon.rBase*3.0){
+                const push = (1 - d/(lanternMoon.rBase*3.0)) * 24;
+                p.vx += (dx/d) * push;
+                p.vy += (dy/d) * push * 0.75;
+                p.glow = Math.max(p.glow, 0.35);
+              }
+            }
+            return;
+          }
+
           const li = hitLantern(x,y);
           if (li !== -1){
             const p = lanterns[li];
@@ -1417,8 +1571,8 @@
 
             // glow up + tiny bump so it feels responsive
             p.glow = 1;
-            p.vx += rand(-25,25);
-            p.vy += rand(-22,22);
+            p.vx += rand(-22,22);
+            p.vy += rand(-18,18);
 
             // holiday message
             const idx = holidayOrder[holidayPtr % holidayOrder.length];
@@ -1574,7 +1728,6 @@
             bloomScale: 2.4,
             warpScale: 5.0,
             onWarpComplete: () => {
-              // entering lantern scene: no Boo Planet rendered here anymore
               initLanterns(true);
               goToScene('lantern');
             }
@@ -1587,8 +1740,14 @@
         }
 
         if (scene === 'lantern'){
-          // ✅ Boo Planet removed: only lantern sky
+          // ✅ Lantern Sky: central moon + orbiting lanterns
+          updateLanternMoon(dt);
           updateLanterns(dt, tSec);
+
+          // draw moon behind lanterns
+          drawLanternMoon(tSec);
+
+          // draw lanterns
           for (const p of lanterns) drawLantern(p, tSec);
         }
 
