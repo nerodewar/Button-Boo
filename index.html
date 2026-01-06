@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Big Boo Planet (v1.2)</title>
+  <title>Big Boo Planet (v1.3)</title>
 
   <!-- Retro arcade font (online). If you want offline, download and self-host. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +20,7 @@
       --muted:rgba(214,230,255,0.80);
 
       --glass: rgba(10, 24, 58, 0.38);
+      --glass2: rgba(10, 24, 58, 0.26);
       --radius: 22px;
       --shadow: 0 24px 70px rgba(0,0,0,.55);
 
@@ -148,7 +149,7 @@
       text-align:center;
     }
 
-    /* Bottom center "Press to Play" (no button) */
+    /* Bottom center "Press to Play" */
     .pressToPlay{
       position:fixed;
       left:0;
@@ -170,18 +171,73 @@
       opacity: 0.95;
     }
 
+    /* Floating message overlay (fade in/out via JS) */
+    .messageWrap{
+      position:fixed;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      padding-top: env(safe-area-inset-top);
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+      z-index: 50;
+    }
+    .messageCard{
+      width: min(860px, 100%);
+      border-radius: 18px;
+      background:
+        radial-gradient(900px 420px at 30% 20%, rgba(255,255,255,0.08), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+        var(--glass2);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 18px 46px rgba(0,0,0,.35);
+      padding: 12px 14px;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity 520ms ease, transform 520ms ease;
+    }
+    .messageCard.isVisible{
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .messageText{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: clamp(14px, 1.9vw, 16px);
+      line-height: 1.55;
+      color: rgba(244,248,255,0.90);
+      text-shadow: 0 0 16px rgba(255,255,255,0.08);
+      text-align:center;
+      margin:0;
+      white-space:pre-wrap;
+    }
+    .messageText strong{
+      font-weight: 800;
+      color: rgba(244,248,255,0.96);
+    }
+
     @media (prefers-reduced-motion: reduce){
-      .panel{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+      .panel, .messageCard{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+      .messageCard{ transition:none; }
     }
   </style>
 </head>
 
 <body>
-  <canvas id="stage" aria-label="Button Boo star stage"></canvas>
+  <canvas id="stage" aria-label="Big Boo Planet star stage"></canvas>
 
   <audio id="bgm" preload="auto" loop>
     <source src="assets/music/button-boo.mp3" type="audio/mpeg">
   </audio>
+
+  <!-- Message overlay -->
+  <div class="messageWrap" aria-hidden="true">
+    <div class="messageCard" id="messageCard">
+      <p class="messageText" id="messageText"></p>
+    </div>
+  </div>
 
   <div class="ui">
     <!-- WELCOME -->
@@ -191,24 +247,18 @@
 
         <div class="copy">
           <p><strong style="color:rgba(244,248,255,0.95);">This is a sensory cause-and-effect playground.</strong></p>
-          <p>
-            A first interaction with screens and a way for your little ones to develop:
-          </p>
+          <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs. 
+            <li>Press the star to see it glow, push and pull the sattelites to change their trajectory...</li> 
+            <li>Big Boo Planet can help young children to develop:</li>
           <ul>
             <li><strong>Cause &amp; effect understanding</strong></li>
             <li><strong>Motor control</strong></li>
             <li><strong>Sensory processing</strong></li>
             <li><strong>Emotional safety with screens</strong></li>
           </ul>
-          <p style="margin-top:12px;">
-            without overstimulation nor “wrong” inputs.
-          </p>
         </div>
 
-        <button class="startBtn" id="startBtn" type="button" aria-label="Start Big Boo Planet">
-          START
-        </button>
-
+        <button class="startBtn" id="startBtn" type="button" aria-label="Start Big Boo Planet">START</button>
         <div class="hint">Tap START to begin.</div>
       </div>
     </div>
@@ -239,6 +289,9 @@
       const play = document.getElementById('play');
       const startBtn = document.getElementById('startBtn');
       const pressToPlay = document.getElementById('pressToPlay');
+
+      const messageCard = document.getElementById('messageCard');
+      const messageText = document.getElementById('messageText');
 
       // ---------- Sizing ----------
       let w=0, h=0, dpr=1;
@@ -373,6 +426,118 @@
       }
       initSatellites();
       window.addEventListener('resize', initSatellites, { passive:true });
+
+      // ---------- Calm universe messages (7.5s total per trigger) ----------
+      // Only start if no message is currently playing.
+      const UNIVERSE_MESSAGES = [
+        // Message 1 is a 2-part sequence (each part fades in/out)
+        {
+          parts: [
+            "Our universe is old…",
+            "The galaxy where we live, the Milky Way, is an estimated 13.6 billion years old!"
+          ]
+        },
+        { text: "Space is so big… even light, the fastest thing we know, takes time to travel." },
+        { text: "Stars are very far away… the sunlight we feel is about 8 minutes old when it reaches us." },
+        { text: "The Milky Way is huge… it holds hundreds of billions of stars, like a sparkling ocean." },
+        { text: "We live on a tiny planet… Earth is like a small boat in a very, very wide cosmic sea." },
+        { text: "Some stars are giants… many could fit our Sun inside them again and again." },
+        { text: "Some stars are newborns… forming slowly inside soft clouds of cosmic dust." },
+        { text: "There are many galaxies… and each one is its own great swirl of stars." },
+        { text: "Space has quiet travelers… comets and asteroids drift for a long time, far from home." },
+        { text: "Gravity is a gentle pull… it helps planets stay in their paths around stars." },
+        { text: "We are made of star-stuff… the atoms in our bodies were once part of ancient stars." }
+      ];
+
+      let messageIndex = 0;
+      let messagePlaying = false;
+      let messageTimers = [];
+
+      function clearMessageTimers(){
+        for (const id of messageTimers) clearTimeout(id);
+        messageTimers = [];
+      }
+
+      function setMessageVisible(isVisible){
+        if (isVisible) messageCard.classList.add('isVisible');
+        else messageCard.classList.remove('isVisible');
+      }
+
+      function showMessage(text){
+        messageText.textContent = text;
+        // next frame helps Safari apply transitions reliably
+        requestAnimationFrame(() => setMessageVisible(true));
+      }
+
+      function hideMessage(){
+        setMessageVisible(false);
+      }
+
+      // Plays one "part" inside a given time window with fade in/out
+      function playPart(text, partMs, fadeMs){
+        const holdMs = Math.max(0, partMs - (fadeMs * 2));
+
+        showMessage(text);
+
+        // hide after (fade in + hold)
+        messageTimers.push(setTimeout(() => {
+          hideMessage();
+        }, fadeMs + holdMs));
+
+        // ensure fully hidden by end of part
+        messageTimers.push(setTimeout(() => {
+          // keep hidden, no-op but ensures state
+          hideMessage();
+        }, partMs));
+      }
+
+      function playUniverseMessage(){
+        if (!allowInput) return;
+        if (messagePlaying) return;
+
+        messagePlaying = true;
+        clearMessageTimers();
+
+        const msg = UNIVERSE_MESSAGES[messageIndex % UNIVERSE_MESSAGES.length];
+        messageIndex++;
+
+        const totalMs = 7500;
+
+        // If 2-part message: split total evenly (each part has its own fade in/out)
+        if (msg.parts && Array.isArray(msg.parts) && msg.parts.length > 1){
+          const parts = msg.parts.slice(0, 2);
+          const partMs = Math.floor(totalMs / parts.length); // 3750ms each
+          const fadeMs = 450; // gentle but readable
+
+          // Part 1
+          playPart(parts[0], partMs, fadeMs);
+
+          // Part 2 starts after part 1 completes
+          messageTimers.push(setTimeout(() => {
+            playPart(parts[1], partMs, fadeMs);
+          }, partMs));
+
+          // End
+          messageTimers.push(setTimeout(() => {
+            hideMessage();
+            messagePlaying = false;
+          }, partMs * parts.length + 20));
+
+          return;
+        }
+
+        // Single-part message: fade in / hold / fade out across 7.5s
+        const fadeMs = 600;
+        const holdMs = totalMs - (fadeMs * 2);
+
+        showMessage(msg.text || "");
+
+        messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
+        messageTimers.push(setTimeout(() => {
+          hideMessage();
+          messagePlaying = false;
+        }, totalMs + 20));
+      }
 
       // ---------- Interaction ----------
       let allowInput = false;
@@ -597,7 +762,6 @@
         const r = star.rBase * star.scale;
         const intensity = star.intensity;
 
-        // crown near end of bloom
         let crownAlpha = 0;
         if (star.state === 'bloomUp'){
           const tt = clamp((nowMs - star.t0) / star.bloomUpMs, 0, 1);
@@ -615,7 +779,6 @@
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // flares
         drawFlares(r, tSec, intensity);
 
         // corona
@@ -648,7 +811,7 @@
           ctx.restore();
         }
 
-        // plasma body (irregular clip)
+        // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.translate(star.cx, star.cy);
@@ -804,8 +967,14 @@
         const idx = hitSatellite(x,y);
         if (idx !== -1){
           const s = satellites[idx];
+
+          // Satellite interaction:
           startSatelliteSwell(s, now);
 
+          // Show a calm universe message (only if none currently playing)
+          playUniverseMessage();
+
+          // Dragging
           drag.active = true;
           drag.satIndex = idx;
           drag.pointerId = e.pointerId;
@@ -919,6 +1088,11 @@
           drag.active = false;
           drag.satIndex = -1;
           drag.pointerId = null;
+
+          // stop any playing message cleanly
+          messagePlaying = false;
+          clearMessageTimers();
+          hideMessage();
         }
       });
     })();
