@@ -491,30 +491,12 @@
 
       // ---------- Content ----------
       const MOON_FACTS = [
-        "Moon fact: Our Moon helps steady Earth’s tilt — that makes seasons more gentle and predictable.",
-        "Moon fact: The Moon is moving away from Earth a tiny bit each year (about the width of a fingernail).",
-        "Moon fact: Many moons are icy worlds — some may even hide oceans under their surfaces.",
-        "Moon fact: Moons can shape their planets — their gravity can cause tides, waves, and even volcanoes."
+        ""
       ];
       let moonFactIndex = 0;
 
       const HOLIDAY_MESSAGES = [
-        "Festival of Lights: Many cultures celebrate light in the dark season — candles, lanterns, and warmth together.",
-        "New Year’s Eve: A gentle goodbye to the old year, and a brave hello to the new.",
-        "Lunar New Year: Families gather, share food, and welcome luck with bright colors and joyful sounds.",
-        "Diwali: Lamps and lanterns shine to celebrate hope, goodness, and new beginnings.",
-        "Hanukkah: A nightly candle reminds us that small light can last longer than we imagine.",
-        "Christmas: Cozy traditions — twinkly lights, stories, kindness, and togetherness.",
-        "Kwanzaa: A celebration of community, culture, and shared values through seven guiding principles.",
-        "Eid: A day of gratitude, generosity, and sweet joy after a season of reflection.",
-        "Holi: A celebration of color — playful, bright, and full of laughter.",
-        "Mid-Autumn Festival: Mooncakes, lanterns, and looking up together at the same glowing moon.",
-        "Winter Solstice: The longest night — and the turning point back toward longer days.",
-        "Day of the Dead: Remembering loved ones with stories, flowers, music, and love that stays close.",
-        "Vaisakhi: Songs, community meals, and bright spirit to welcome spring and new harvests.",
-        "Nowruz: A fresh start at springtime — cleaning, sharing, and planting hope for the year ahead.",
-        "Carnival: A joyful parade of costumes, music, and playful celebration before a quieter season.",
-        "Light a Lantern: Wherever you are, a little light can be a message: “You are safe. You are loved.”"
+        ""
       ];
 
       // ---------- Scenes ----------
@@ -1460,9 +1442,9 @@
         for (const p of lanterns) p.glow = 0;
 
         if (scene === 'planet'){
-          showOneShot("Welcome to Boo Planet.\nTap the moon for moon facts.\nDouble tap Boo Planet to visit the Lantern Sky.", 7000);
+          showOneShot("", 7000);
         } else if (scene === 'lantern'){
-          showOneShot("Lantern Sky.\nTap a lantern to discover a world holiday.\nTap it again to change its colour.", 6200);
+          showOneShot("", 6200);
         } else if (scene === 'star'){
           showOneShot("Tip: Double tap the star to travel to Boo Planet.", 5200);
         }
