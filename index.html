@@ -218,6 +218,25 @@
       color: rgba(244,248,255,0.96);
     }
 
+    /* ✅ Copyright (small, unobtrusive, appears on all screens) */
+    .copyrightMark{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom: 6px;
+      padding-bottom: env(safe-area-inset-bottom);
+      text-align:center;
+      pointer-events:none;
+      user-select:none;
+      z-index: 60;
+
+      font-size: 0.72rem;
+      color: rgba(214,230,255,0.52);
+      opacity: 0.92;
+      letter-spacing: .2px;
+      text-shadow: 0 0 14px rgba(0,0,0,0.45);
+    }
+
     @media (prefers-reduced-motion: reduce){
       .panel, .messageCard{ backdrop-filter:none; -webkit-backdrop-filter:none; }
       .messageCard{ transition:none; }
@@ -267,6 +286,9 @@
   </div>
 
   <div class="pressToPlay" id="pressToPlay">Press to Play</div>
+
+  <!-- ✅ Copyright mark (visible across welcome + play) -->
+  <div class="copyrightMark">© 2026 Boo Industries. All rights reserved.</div>
 
   <script>
     (() => {
