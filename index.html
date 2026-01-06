@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Boo Planet (v1.5)</title>
+  <title>Boo Planet (v1.3)</title>
 
   <!-- Retro arcade font (online). If you want offline, download and self-host. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,19 +17,15 @@
       --bg2:#0b1d4a;
 
       --text:#F4F8FF;
-      --muted:rgba(214,230,255,0.82);
+      --muted:rgba(214,230,255,0.80);
 
       --glass: rgba(10, 24, 58, 0.38);
       --glass2: rgba(10, 24, 58, 0.26);
-
       --radius: 22px;
       --shadow: 0 24px 70px rgba(0,0,0,.55);
 
       --arcadeBlue1:#2aa8ff;
       --arcadeBlue2:#0a4ee6;
-
-      --arcadeRed1:#ff3b5c;
-      --arcadeRed2:#c51435;
     }
 
     *{ box-sizing:border-box; }
@@ -39,82 +35,9 @@
       margin:0;
       font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:var(--text);
-      background:
-        radial-gradient(1100px 600px at 14% 12%, rgba(143,243,255,0.18), rgba(0,0,0,0) 55%),
-        radial-gradient(900px 560px at 86% 22%, rgba(168,160,255,0.20), rgba(0,0,0,0) 60%),
-        radial-gradient(900px 650px at 50% 110%, rgba(88,200,255,0.10), rgba(0,0,0,0) 65%),
-        linear-gradient(180deg, var(--bg0), var(--bg1) 55%, var(--bg2));
+      background: linear-gradient(180deg, var(--bg0), var(--bg1) 55%, var(--bg2));
       overflow:hidden;
     }
-
-    /* layout-safe star overlays (fixed) */
-    body::before{
-      content:"";
-      position:fixed;
-      inset:-2px;
-      pointer-events:none;
-      z-index:0;
-      background:
-        radial-gradient(1px 1px at 8% 16%,  rgba(255,255,255,.70), rgba(0,0,0,0) 2px),
-        radial-gradient(1px 1px at 18% 72%, rgba(255,255,255,.55), rgba(0,0,0,0) 2px),
-        radial-gradient(1px 1px at 32% 28%, rgba(255,255,255,.62), rgba(0,0,0,0) 2px),
-        radial-gradient(1px 1px at 56% 44%, rgba(255,255,255,.48), rgba(0,0,0,0) 2px),
-        radial-gradient(1px 1px at 76% 18%, rgba(255,255,255,.66), rgba(0,0,0,0) 2px),
-        radial-gradient(1px 1px at 90% 62%, rgba(255,255,255,.52), rgba(0,0,0,0) 2px),
-
-        radial-gradient(1.6px 1.6px at 14% 40%, rgba(210,240,255,.55), rgba(0,0,0,0) 3px),
-        radial-gradient(1.6px 1.6px at 44% 12%, rgba(235,225,255,.50), rgba(0,0,0,0) 3px),
-        radial-gradient(1.6px 1.6px at 68% 78%, rgba(215,245,255,.48), rgba(0,0,0,0) 3px),
-        radial-gradient(1.6px 1.6px at 82% 36%, rgba(255,255,255,.46), rgba(0,0,0,0) 3px),
-
-        radial-gradient(2.2px 2.2px at 24% 22%, rgba(255,255,255,.85), rgba(0,0,0,0) 4px),
-        radial-gradient(2.2px 2.2px at 62% 30%, rgba(255,255,255,.78), rgba(0,0,0,0) 4px),
-        radial-gradient(2.2px 2.2px at 74% 58%, rgba(255,255,255,.70), rgba(0,0,0,0) 4px),
-
-        radial-gradient(900px 520px at 18% 22%, rgba(143,243,255,.07), rgba(0,0,0,0) 62%),
-        radial-gradient(820px 540px at 82% 28%, rgba(168,160,255,.08), rgba(0,0,0,0) 64%);
-      opacity:.75;
-      filter: blur(.15px);
-      mix-blend-mode: screen;
-      transform: translate3d(0,0,0);
-      animation: starDrift 28s linear infinite;
-    }
-
-    body::after{
-      content:"";
-      position:fixed;
-      inset:-35%;
-      pointer-events:none;
-      z-index:0;
-      background:
-        radial-gradient(900px 700px at 30% 30%, rgba(168,160,255,.10), rgba(0,0,0,0) 60%),
-        radial-gradient(820px 660px at 70% 40%, rgba(143,243,255,.09), rgba(0,0,0,0) 62%),
-        radial-gradient(760px 640px at 55% 75%, rgba(255,255,255,.04), rgba(0,0,0,0) 65%),
-        conic-gradient(from 140deg at 50% 50%,
-          rgba(143,243,255,0.16),
-          rgba(168,160,255,0.14),
-          rgba(255,255,255,0.05),
-          rgba(143,243,255,0.12));
-      opacity:.30;
-      filter: blur(30px);
-      mix-blend-mode: screen;
-      transform: translate3d(0,0,0);
-      animation: auroraDrift 16s ease-in-out infinite;
-    }
-
-    @keyframes starDrift{
-      0%   { transform: translate(-1.5%, -1.0%); }
-      50%  { transform: translate(1.5%,  1.0%); }
-      100% { transform: translate(-1.5%, -1.0%); }
-    }
-    @keyframes auroraDrift{
-      0%   { transform: translate(-4%, -2%) rotate(0deg); }
-      50%  { transform: translate(4%, 3%) rotate(12deg); }
-      100% { transform: translate(-4%, -2%) rotate(0deg); }
-    }
-
-    /* Keep UI above fixed layers */
-    body > *{ position:relative; z-index:1; }
 
     #stage{
       position:fixed;
@@ -122,8 +45,7 @@
       width:100%;
       height:100%;
       display:block;
-      touch-action:none; /* we manage dragging/taps */
-      z-index:1;
+      touch-action:none; /* we manage dragging */
     }
 
     .ui{
@@ -134,7 +56,6 @@
       justify-content:center;
       padding:18px;
       pointer-events:none;
-      z-index:2;
     }
 
     .panel{
@@ -174,7 +95,7 @@
     }
 
     .copy{
-      max-width: 60ch;
+      max-width: 58ch;
       margin: 0 auto;
       text-align:center;
       color: var(--muted);
@@ -248,7 +169,6 @@
         0 0 18px rgba(255,255,255,0.10),
         0 0 30px rgba(143,243,255,0.10);
       opacity: 0.95;
-      z-index: 3;
     }
 
     /* Floating message overlay (fade in/out via JS) */
@@ -284,6 +204,7 @@
       transform: translateY(0);
     }
     .messageText{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       font-size: clamp(14px, 1.9vw, 16px);
       line-height: 1.55;
       color: rgba(244,248,255,0.90);
@@ -297,93 +218,28 @@
       color: rgba(244,248,255,0.96);
     }
 
-    /* Top controls */
-    .topControls{
-      position:fixed;
-      left:12px;
-      right:12px;
-      top:12px;
-      padding-top: env(safe-area-inset-top);
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      z-index: 40;
-      pointer-events:none;
-    }
-    .ctrlGroup{
-      display:flex;
-      gap:10px;
-      pointer-events:auto;
-    }
-    .ctrlBtn{
-      font-family: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      letter-spacing:.6px;
-      font-size: 11px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.04);
-      color: rgba(244,248,255,0.92);
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 12px 26px rgba(0,0,0,.25);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .ctrlBtn:active{ transform: translateY(1px) scale(0.99); filter: brightness(0.98); }
-
-    .ctrlBtn.primary{
-      background:
-        radial-gradient(200px 90px at 20% 0%, rgba(255,255,255,0.16), rgba(0,0,0,0) 70%),
-        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0) 42%),
-        linear-gradient(180deg, var(--arcadeBlue1), var(--arcadeBlue2));
-      border:1px solid rgba(255,255,255,0.12);
-      box-shadow:
-        0 16px 40px rgba(0,0,0,0.35),
-        0 0 0 1px rgba(255,255,255,0.10) inset,
-        0 0 26px rgba(42,168,255,0.18);
-    }
-
-    .ctrlBtn.visit{
-      background:
-        radial-gradient(200px 90px at 20% 0%, rgba(255,255,255,0.16), rgba(0,0,0,0) 70%),
-        linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0) 42%),
-        linear-gradient(180deg, rgba(255,59,92,0.96), rgba(197,20,53,0.92));
-      border:1px solid rgba(255,255,255,0.12);
-      box-shadow:
-        0 16px 40px rgba(0,0,0,0.35),
-        0 0 0 1px rgba(255,255,255,0.10) inset,
-        0 0 26px rgba(255,59,92,0.14);
-    }
-
-    .ctrlBtn[disabled]{
-      opacity: .45;
-      cursor: default;
-      filter: grayscale(0.15);
-    }
-
-    /* Copyright footer */
-    .copyright{
+    /* ✅ Copyright (small, unobtrusive, appears on all screens) */
+    .copyrightMark{
       position:fixed;
       left:0;
       right:0;
-      bottom: 8px;
+      bottom: 6px;
       padding-bottom: env(safe-area-inset-bottom);
       text-align:center;
-      font-size: 11px;
-      color: rgba(214,230,255,0.42);
-      text-shadow: 0 0 14px rgba(0,0,0,0.35);
-      user-select:none;
       pointer-events:none;
-      z-index: 3;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      user-select:none;
+      z-index: 60;
+
+      font-size: 0.72rem;
+      color: rgba(214,230,255,0.52);
+      opacity: 0.92;
+      letter-spacing: .2px;
+      text-shadow: 0 0 14px rgba(0,0,0,0.45);
     }
 
     @media (prefers-reduced-motion: reduce){
       .panel, .messageCard{ backdrop-filter:none; -webkit-backdrop-filter:none; }
       .messageCard{ transition:none; }
-      body::before, body::after{ animation:none !important; }
     }
   </style>
 </head>
@@ -402,17 +258,6 @@
     </div>
   </div>
 
-  <!-- Top controls -->
-  <div class="topControls" aria-hidden="false">
-    <div class="ctrlGroup">
-      <button class="ctrlBtn" id="backBtn" type="button" disabled>BACK</button>
-      <button class="ctrlBtn" id="homeBtn" type="button" disabled>HOME</button>
-    </div>
-    <div class="ctrlGroup">
-      <button class="ctrlBtn visit" id="visitBtn" type="button" disabled>VISIT PLANET BOO</button>
-    </div>
-  </div>
-
   <div class="ui">
     <!-- WELCOME -->
     <div class="panel screen active" id="welcome">
@@ -421,8 +266,8 @@
 
         <div class="copy">
           <p><strong style="color:rgba(244,248,255,0.95);">This is a sensory cause-and-effect playground.</strong></p>
-          <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs.</p>
-          <p>Press the star to see it glow, push and pull the satellites to change their trajectory… Boo Planet can help young children to develop:</p>
+          <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs. 
+            <p>Press the star to see it glow, push and pull the sattelites to change their trajectory... Boo Planet can help young children to develop:</p>
           <ul>
             <li><strong>Cause &amp; effect understanding</strong></li>
             <li><strong>Motor control</strong></li>
@@ -441,7 +286,9 @@
   </div>
 
   <div class="pressToPlay" id="pressToPlay">Press to Play</div>
-  <div class="copyright">© Boo Industries</div>
+
+  <!-- ✅ Copyright mark (visible across welcome + play) -->
+  <div class="copyrightMark">© 2026 Boo Industries. All rights reserved.</div>
 
   <script>
     (() => {
@@ -450,19 +297,9 @@
       const lerp = (a, b, t) => a + (b - a) * t;
       const lerpColor = (c1, c2, t) => ({ r: lerp(c1.r,c2.r,t), g: lerp(c1.g,c2.g,t), b: lerp(c1.b,c2.b,t) });
       const toRGBA = (c, a=1) => `rgba(${c.r|0},${c.g|0},${c.b|0},${a})`;
+
       const easeInOutCubic = t => (t < 0.5) ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-      const rand = (a,b)=> lerp(a,b,Math.random());
-
-      // tiny hash for fingerprints
-      function hashStr(s){
-        let h = 2166136261;
-        for (let i=0;i<s.length;i++){
-          h ^= s.charCodeAt(i);
-          h = Math.imul(h, 16777619);
-        }
-        return (h >>> 0).toString(16);
-      }
 
       // ---------- DOM ----------
       const canvas = document.getElementById('stage');
@@ -477,12 +314,9 @@
       const messageCard = document.getElementById('messageCard');
       const messageText = document.getElementById('messageText');
 
-      const backBtn = document.getElementById('backBtn');
-      const homeBtn = document.getElementById('homeBtn');
-      const visitBtn = document.getElementById('visitBtn');
-
       // ---------- Sizing ----------
       let w=0, h=0, dpr=1;
+
       function resize(){
         dpr = Math.min(2, window.devicePixelRatio || 1);
         w = Math.floor(window.innerWidth);
@@ -496,149 +330,8 @@
       window.addEventListener('resize', resize, { passive:true });
       resize();
 
-      // ---------- Scenes + History ----------
-      const SCENE = {
-        WELCOME: 'welcome',
-        SPACE:   'space',
-        PLANET:  'planet',
-        SKY:     'sky',
-        LAND:    'land',
-        SEA:     'sea'
-      };
-
-      let scene = SCENE.WELCOME;
-      const history = [];
-
-      function setScreen(which){
-        welcome.classList.toggle('active', which === SCENE.WELCOME);
-        play.classList.toggle('active', which !== SCENE.WELCOME);
-      }
-
-      function canGoBack(){ return history.length > 0; }
-      function canGoHome(){ return scene !== SCENE.WELCOME && scene !== SCENE.SPACE; }
-
-      function updateButtons(){
-        const inGame = scene !== SCENE.WELCOME;
-        backBtn.disabled = !(inGame && canGoBack());
-        homeBtn.disabled = !(scene !== SCENE.WELCOME);
-        // enable visit only on SPACE scene
-        visitBtn.disabled = !(scene === SCENE.SPACE);
-      }
-
-      function goto(next, push=true){
-        if (push && scene !== next && scene !== SCENE.WELCOME){
-          history.push(scene);
-        }
-        scene = next;
-        setScreen(next);
-        pressToPlay.style.display = (next === SCENE.SPACE) ? 'block' : 'none';
-        updateButtons();
-
-        // biome creature regen per session: generate when entering a biome
-        if (next === SCENE.SKY || next === SCENE.LAND || next === SCENE.SEA){
-          initCreatures(next);
-        }
-      }
-
-      backBtn.addEventListener('click', () => {
-        if (!canGoBack()) return;
-        const prev = history.pop();
-        goto(prev, false);
-      });
-
-      homeBtn.addEventListener('click', () => {
-        history.length = 0;
-        goto(SCENE.SPACE, false);
-      });
-
-      visitBtn.addEventListener('click', () => {
-        goto(SCENE.PLANET, true);
-      });
-
-      // ---------- Music ----------
-      async function startMusic(){
-        try{
-          if (bgm && bgm.paused){
-            bgm.volume = 0.45;
-            await bgm.play();
-          }
-        }catch(_e){}
-      }
-
-      // ---------- Calm universe messages (7.5s total) ----------
-      const UNIVERSE_MESSAGES = [
-        { parts: ["Our universe is old…", "The galaxy where we live, the Milky Way, is an estimated 13.6 billion years old!"] },
-        { text: "Space is so big… even light, the fastest thing we know, takes time to travel." },
-        { text: "Stars are very far away… sunlight is about 8 minutes old when it reaches us." },
-        { text: "The Milky Way is huge… it holds hundreds of billions of stars, like a sparkling ocean." },
-        { text: "We live on a celestial planet… Earth orbits our own star: the Sun." },
-        { text: "Some stars are giants… many could fit our Sun inside them again and again." },
-        { text: "Some stars are newborns… forming slowly inside soft clouds of cosmic dust." },
-        { text: "There are many galaxies… each one is its own great swirl of stars." },
-        { text: "Gravity is a gentle pull… it helps planets stay in their paths around stars." },
-        { text: "We are made of star-stuff… the atoms in our bodies were once part of ancient stars." },
-        { text: "Space can be quiet… and still full of motion, drifting and dancing softly." }
-      ];
-
-      let messageIndex = 0;
-      let messagePlaying = false;
-      let messageTimers = [];
-
-      function clearMessageTimers(){
-        for (const id of messageTimers) clearTimeout(id);
-        messageTimers = [];
-      }
-      function setMessageVisible(isVisible){
-        if (isVisible) messageCard.classList.add('isVisible');
-        else messageCard.classList.remove('isVisible');
-      }
-      function showMessage(text){
-        messageText.textContent = text;
-        requestAnimationFrame(() => setMessageVisible(true));
-      }
-      function hideMessage(){ setMessageVisible(false); }
-
-      function playPart(text, partMs, fadeMs){
-        const holdMs = Math.max(0, partMs - (fadeMs * 2));
-        showMessage(text);
-        messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
-        messageTimers.push(setTimeout(() => hideMessage(), partMs));
-      }
-
-      function playUniverseMessage(){
-        if (messagePlaying) return;
-        messagePlaying = true;
-        clearMessageTimers();
-
-        const msg = UNIVERSE_MESSAGES[messageIndex % UNIVERSE_MESSAGES.length];
-        messageIndex++;
-
-        const totalMs = 7500;
-
-        if (msg.parts && Array.isArray(msg.parts) && msg.parts.length > 1){
-          const parts = msg.parts.slice(0, 2);
-          const partMs = Math.floor(totalMs / parts.length);
-          const fadeMs = 450;
-          playPart(parts[0], partMs, fadeMs);
-          messageTimers.push(setTimeout(() => playPart(parts[1], partMs, fadeMs), partMs));
-          messageTimers.push(setTimeout(() => {
-            hideMessage();
-            messagePlaying = false;
-          }, partMs * parts.length + 30));
-          return;
-        }
-
-        const fadeMs = 600;
-        const holdMs = totalMs - (fadeMs * 2);
-        showMessage(msg.text || "");
-        messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
-        messageTimers.push(setTimeout(() => {
-          hideMessage();
-          messagePlaying = false;
-        }, totalMs + 30));
-      }
-
-      // ---------- Background Starfield (canvas) ----------
+      // ---------- Background Starfield ----------
+      const rand = (a,b)=> lerp(a,b,Math.random());
       function makeStars(count, depthMin, depthMax){
         const arr=[];
         for(let i=0;i<count;i++){
@@ -672,44 +365,7 @@
         }
       }
 
-      function drawSpaceBackground(tSec){
-        const g = ctx.createLinearGradient(0,0,0,h);
-        g.addColorStop(0, '#020617');
-        g.addColorStop(0.6, '#06102a');
-        g.addColorStop(1, '#0b1d4a');
-        ctx.fillStyle = g;
-        ctx.fillRect(0,0,w,h);
-
-        const driftX = Math.sin(tSec * 0.05) * 40 + Math.cos(tSec * 0.03) * 25;
-        const driftY = Math.cos(tSec * 0.04) * 30 + Math.sin(tSec * 0.06) * 18;
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        drawStarLayer(starsFar,  tSec, driftX*0.25, driftY*0.25);
-        drawStarLayer(starsMid,  tSec, driftX*0.55, driftY*0.55);
-        drawStarLayer(starsNear, tSec, driftX*0.95, driftY*0.95);
-        ctx.restore();
-
-        // nebula haze
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const haze1 = ctx.createRadialGradient(w*0.25, h*0.25, 0, w*0.25, h*0.25, Math.min(w,h)*0.65);
-        haze1.addColorStop(0.0, 'rgba(168,160,255,0.10)');
-        haze1.addColorStop(0.7, 'rgba(143,243,255,0.06)');
-        haze1.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = haze1;
-        ctx.fillRect(0,0,w,h);
-
-        const haze2 = ctx.createRadialGradient(w*0.78, h*0.35, 0, w*0.78, h*0.35, Math.min(w,h)*0.62);
-        haze2.addColorStop(0.0, 'rgba(143,243,255,0.08)');
-        haze2.addColorStop(0.7, 'rgba(168,160,255,0.06)');
-        haze2.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = haze2;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-      }
-
-      // ---------- Palettes for Main Star ----------
+      // ---------- Palettes ----------
       const PALETTES = [
         { core:{r:200,g:250,b:255}, plasma:{r:143,g:243,b:255}, corona:{r:168,g:160,b:255}, spark:{r:255,g:255,b:255} },
         { core:{r:255,g:240,b:210}, plasma:{r:255,g:210,b:120}, corona:{r:255,g:170,b:90},  spark:{r:255,g:255,b:255} },
@@ -741,7 +397,7 @@
         };
       }
 
-      // ---------- SPACE: Main Star + Satellites ----------
+      // ---------- Main Star ----------
       const star = {
         cx:0, cy:0, rBase:0,
         rot:0, rot2:0,
@@ -753,18 +409,19 @@
         intensity: 1
       };
 
-      function computeSpaceLayout(){
+      function computeLayout(){
         star.cx = w * 0.5;
         star.cy = h * 0.42;
         const minDim = Math.min(w, h);
         star.rBase = clamp(minDim * 0.165, 96, 190);
       }
-      computeSpaceLayout();
-      window.addEventListener('resize', computeSpaceLayout, { passive:true });
+      computeLayout();
+      window.addEventListener('resize', computeLayout, { passive:true });
 
-      // satellites (draggable orbiters)
+      // ---------- Satellites (draggable orbiters) ----------
       const satellites = [];
       const SAT_COUNT = 5;
+
       function initSatellites(){
         satellites.length = 0;
         for(let i=0;i<SAT_COUNT;i++){
@@ -791,15 +448,133 @@
       initSatellites();
       window.addEventListener('resize', initSatellites, { passive:true });
 
-      // bloom animation (star)
+      // ---------- Calm universe messages (7.5s total per trigger) ----------
+      // Only start if no message is currently playing.
+      const UNIVERSE_MESSAGES = [
+        // Message 1 is a 2-part sequence (each part fades in/out)
+        {
+          parts: [
+            "Our universe is old…",
+            "The galaxy where we live, the Milky Way, is an estimated 13.6 billion years old!"
+          ]
+        },
+        { text: "Space is so big… even light, the fastest thing we know, takes time to travel." },
+        { text: "Stars are very far away… the sunlight we feel is about 8 minutes old when it reaches us." },
+        { text: "The Milky Way is huge… it holds hundreds of billions of stars, like a sparkling ocean." },
+        { text: "We live on a celestial planet… Earth orbits our own star: The Sun." },
+        { text: "Some stars are giants… many could fit our Sun inside them again and again." },
+        { text: "Some stars are newborns… forming slowly inside soft clouds of cosmic dust." },
+        { text: "There are many galaxies… and each one is its own great swirl of stars." },
+        { text: "Space has quiet travelers… comets and asteroids drift for a long time, far from home." },
+        { text: "Gravity is a gentle pull… it helps planets stay in their paths around stars." },
+        { text: "We are made of star-stuff… the atoms in our bodies were once part of ancient stars." }
+      ];
+
+      let messageIndex = 0;
+      let messagePlaying = false;
+      let messageTimers = [];
+
+      function clearMessageTimers(){
+        for (const id of messageTimers) clearTimeout(id);
+        messageTimers = [];
+      }
+
+      function setMessageVisible(isVisible){
+        if (isVisible) messageCard.classList.add('isVisible');
+        else messageCard.classList.remove('isVisible');
+      }
+
+      function showMessage(text){
+        messageText.textContent = text;
+        // next frame helps Safari apply transitions reliably
+        requestAnimationFrame(() => setMessageVisible(true));
+      }
+
+      function hideMessage(){
+        setMessageVisible(false);
+      }
+
+      // Plays one "part" inside a given time window with fade in/out
+      function playPart(text, partMs, fadeMs){
+        const holdMs = Math.max(0, partMs - (fadeMs * 2));
+
+        showMessage(text);
+
+        // hide after (fade in + hold)
+        messageTimers.push(setTimeout(() => {
+          hideMessage();
+        }, fadeMs + holdMs));
+
+        // ensure fully hidden by end of part
+        messageTimers.push(setTimeout(() => {
+          // keep hidden, no-op but ensures state
+          hideMessage();
+        }, partMs));
+      }
+
+      function playUniverseMessage(){
+        if (!allowInput) return;
+        if (messagePlaying) return;
+
+        messagePlaying = true;
+        clearMessageTimers();
+
+        const msg = UNIVERSE_MESSAGES[messageIndex % UNIVERSE_MESSAGES.length];
+        messageIndex++;
+
+        const totalMs = 7500;
+
+        // If 2-part message: split total evenly (each part has its own fade in/out)
+        if (msg.parts && Array.isArray(msg.parts) && msg.parts.length > 1){
+          const parts = msg.parts.slice(0, 2);
+          const partMs = Math.floor(totalMs / parts.length); // 3750ms each
+          const fadeMs = 450; // gentle but readable
+
+          // Part 1
+          playPart(parts[0], partMs, fadeMs);
+
+          // Part 2 starts after part 1 completes
+          messageTimers.push(setTimeout(() => {
+            playPart(parts[1], partMs, fadeMs);
+          }, partMs));
+
+          // End
+          messageTimers.push(setTimeout(() => {
+            hideMessage();
+            messagePlaying = false;
+          }, partMs * parts.length + 20));
+
+          return;
+        }
+
+        // Single-part message: fade in / hold / fade out across 7.5s
+        const fadeMs = 600;
+        const holdMs = totalMs - (fadeMs * 2);
+
+        showMessage(msg.text || "");
+
+        messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
+        messageTimers.push(setTimeout(() => {
+          hideMessage();
+          messagePlaying = false;
+        }, totalMs + 20));
+      }
+
+      // ---------- Interaction ----------
+      let allowInput = false;
+      let lastMs = performance.now();
       let tapThrottleT = 0;
+
       function startMainBloom(nowMs){
+        if (!allowInput) return;
+
         if (star.state === 'idle') {
           pickNewPalette(nowMs);
           star.state = 'bloomUp';
           star.t0 = nowMs;
           return;
         }
+
         if (nowMs - tapThrottleT > 500) {
           tapThrottleT = nowMs;
           pickNewPalette(nowMs);
@@ -813,11 +588,13 @@
           star.intensity = 1.0 + 0.06 * (0.5 + 0.5*Math.sin(t * 2*Math.PI / 7.2));
           return;
         }
+
         if (star.state === 'bloomUp'){
           const t = clamp((nowMs - star.t0) / star.bloomUpMs, 0, 1);
           const e = easeInOutCubic(t);
           star.scale = lerp(1.0, 3.0, e);
 
+          // added verve: immediate acknowledgement + passionate swell
           const quick = easeOutCubic(clamp(t / 0.10, 0, 1));
           const long = easeInOutCubic(clamp((t - 0.05) / 0.95, 0, 1));
           star.intensity = 1.05 + 0.30 * quick + 0.90 * long;
@@ -828,12 +605,16 @@
           }
           return;
         }
+
         if (star.state === 'return'){
           const t = clamp((nowMs - star.t0) / star.returnMs, 0, 1);
           const e = easeOutCubic(t);
           star.scale = lerp(3.0, 1.0, e);
+
+          // corona lingers
           const linger = 1 - 0.35 * e;
           star.intensity = (1.25 * linger) + 0.05;
+
           if (t >= 1){
             star.state = 'idle';
             star.t0 = nowMs;
@@ -845,6 +626,7 @@
         s.state = 'swellUp';
         s.t0 = nowMs;
       }
+
       function updateSatelliteSwell(s, nowMs){
         if (s.state === 'idle'){
           const t = nowMs * 0.001;
@@ -869,7 +651,7 @@
         }
       }
 
-      // orbit + drag
+      // ---------- Orbit + Drag ----------
       function updateSatellitePositions(dt){
         for (const s of satellites){
           if (s.dragging) continue;
@@ -878,6 +660,7 @@
           s.y = star.cy + Math.sin(s.angle) * s.orbitRadius;
         }
       }
+
       function setSatelliteOrbitFromPosition(s){
         const dx = s.x - star.cx;
         const dy = s.y - star.cy;
@@ -885,6 +668,7 @@
         s.orbitRadius = clamp(r, star.rBase * 0.85, Math.min(w,h) * 0.48);
         s.angle = Math.atan2(dy, dx);
       }
+
       function hitSatellite(x,y){
         for (let i = satellites.length - 1; i >= 0; i--){
           const s = satellites[i];
@@ -895,15 +679,53 @@
         }
         return -1;
       }
+
       function inMainStarHit(x,y){
         const r = star.rBase * 1.22;
         const dx = x - star.cx;
         const dy = y - star.cy;
         return (dx*dx + dy*dy) <= (r*r);
       }
+
       const drag = { active:false, satIndex:-1, pointerId:null };
 
-      // drawing: main star
+      // ---------- Drawing ----------
+      function drawBackground(tSec){
+        const g = ctx.createLinearGradient(0,0,0,h);
+        g.addColorStop(0, '#020617');
+        g.addColorStop(0.6, '#06102a');
+        g.addColorStop(1, '#0b1d4a');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+
+        const driftX = Math.sin(tSec * 0.05) * 40 + Math.cos(tSec * 0.03) * 25;
+        const driftY = Math.cos(tSec * 0.04) * 30 + Math.sin(tSec * 0.06) * 18;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        drawStarLayer(starsFar,  tSec, driftX*0.25, driftY*0.25);
+        drawStarLayer(starsMid,  tSec, driftX*0.55, driftY*0.55);
+        drawStarLayer(starsNear, tSec, driftX*0.95, driftY*0.95);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const haze1 = ctx.createRadialGradient(w*0.25, h*0.25, 0, w*0.25, h*0.25, Math.min(w,h)*0.65);
+        haze1.addColorStop(0.0, 'rgba(168,160,255,0.08)');
+        haze1.addColorStop(0.7, 'rgba(143,243,255,0.05)');
+        haze1.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = haze1;
+        ctx.fillRect(0,0,w,h);
+
+        const haze2 = ctx.createRadialGradient(w*0.78, h*0.35, 0, w*0.78, h*0.35, Math.min(w,h)*0.62);
+        haze2.addColorStop(0.0, 'rgba(143,243,255,0.06)');
+        haze2.addColorStop(0.7, 'rgba(168,160,255,0.05)');
+        haze2.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = haze2;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      }
+
       function beginShimmerClip(r, tSec){
         const steps = 84;
         ctx.beginPath();
@@ -1154,937 +976,7 @@
         ctx.restore();
       }
 
-      // ---------- PLANET BOO (visual + routing) ----------
-      const planet = {
-        cx: 0, cy: 0,
-        r: 0,
-        rot: 0,
-        zoomT: 0,
-        zooming: false,
-        zoomFrom: { x:0, y:0, s:1 },
-        zoomTo:   { x:0, y:0, s:1 },
-        zoomT0: 0,
-        zoomDur: 950
-      };
-
-      function computePlanetLayout(){
-        planet.cx = w*0.5;
-        planet.cy = h*0.52;
-        planet.r = clamp(Math.min(w,h)*0.24, 120, 240);
-      }
-      computePlanetLayout();
-      window.addEventListener('resize', computePlanetLayout, { passive:true });
-
-      // simple procedural noise dots
-      function drawNoiseDisk(cx, cy, r, count, col, alpha, tSec, drift){
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.fillStyle = col;
-        ctx.globalAlpha = alpha;
-        for (let i=0;i<count;i++){
-          const a = (i / count) * Math.PI*2 + tSec*0.02*drift;
-          const rr = r * (0.05 + 0.95 * ((Math.sin(i*12.989 + 0.2) + 1) * 0.5));
-          const x = cx + Math.cos(a*drift + i*0.11) * rr * 0.8;
-          const y = cy + Math.sin(a*0.9 + i*0.17) * rr * 0.6;
-          ctx.fillRect(x, y, 1, 1);
-        }
-        ctx.restore();
-      }
-
-      function drawPlanetBoo(tSec){
-        // subtle zoom transform (for entering planet/biomes)
-        let tx = 0, ty = 0, s = 1;
-        if (planet.zooming){
-          const t = clamp((performance.now() - planet.zoomT0) / planet.zoomDur, 0, 1);
-          const e = easeInOutCubic(t);
-          tx = lerp(planet.zoomFrom.x, planet.zoomTo.x, e);
-          ty = lerp(planet.zoomFrom.y, planet.zoomTo.y, e);
-          s  = lerp(planet.zoomFrom.s, planet.zoomTo.s, e);
-          if (t >= 1) planet.zooming = false;
-        }
-
-        ctx.save();
-        ctx.translate(tx, ty);
-        ctx.scale(s, s);
-
-        const cx = planet.cx, cy = planet.cy, r = planet.r;
-        planet.rot += 0.0025;
-
-        // atmospheric glow (outer)
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const atmo = ctx.createRadialGradient(cx, cy, r*0.96, cx, cy, r*1.55);
-        atmo.addColorStop(0.0, 'rgba(120,190,255,0.00)');
-        atmo.addColorStop(0.25,'rgba(120,190,255,0.12)');
-        atmo.addColorStop(0.55,'rgba(168,160,255,0.10)');
-        atmo.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = atmo;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r*1.55, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-
-        // planet shadow limb (terminator)
-        const shade = ctx.createRadialGradient(cx - r*0.28, cy - r*0.22, r*0.20, cx - r*0.05, cy - r*0.02, r*1.25);
-        shade.addColorStop(0.0, 'rgba(0,0,0,0.00)');
-        shade.addColorStop(0.55,'rgba(0,0,0,0.18)');
-        shade.addColorStop(1.0, 'rgba(0,0,0,0.52)');
-
-        // planet base disk
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI*2);
-        ctx.clip();
-
-        // base gradient
-        const base = ctx.createRadialGradient(cx - r*0.25, cy - r*0.25, r*0.1, cx, cy, r*1.1);
-        base.addColorStop(0.0, 'rgba(255,255,255,0.10)');
-        base.addColorStop(0.25,'rgba(160,210,255,0.10)');
-        base.addColorStop(0.55,'rgba(60,120,220,0.12)');
-        base.addColorStop(1.0, 'rgba(0,0,0,0.12)');
-        ctx.fillStyle = base;
-        ctx.fillRect(cx-r, cy-r, r*2, r*2);
-
-        // layer bands: sky / land / sea (with parallax drift)
-        const yTop = cy - r;
-        const bandH = r*2;
-
-        // ocean (bottom third)
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const ocean = ctx.createLinearGradient(0, yTop + bandH*0.58, 0, yTop + bandH*1.0);
-        ocean.addColorStop(0.0, 'rgba(20,70,180,0.20)');
-        ocean.addColorStop(0.6, 'rgba(16,40,120,0.26)');
-        ocean.addColorStop(1.0, 'rgba(10,18,70,0.34)');
-        ctx.fillStyle = ocean;
-        ctx.fillRect(cx-r, yTop + bandH*0.58, r*2, bandH*0.42);
-
-        // caustics
-        ctx.globalAlpha = 0.45;
-        for(let i=0;i<10;i++){
-          const yy = yTop + bandH*(0.62 + i*0.035) + Math.sin(tSec*0.8 + i*1.7)*2.2;
-          const wave = ctx.createLinearGradient(cx-r, yy, cx+r, yy);
-          wave.addColorStop(0.0, 'rgba(255,255,255,0)');
-          wave.addColorStop(0.45, 'rgba(255,255,255,0.06)');
-          wave.addColorStop(0.55, 'rgba(255,255,255,0.08)');
-          wave.addColorStop(1.0, 'rgba(255,255,255,0)');
-          ctx.fillStyle = wave;
-          ctx.fillRect(cx-r, yy, r*2, 2);
-        }
-        ctx.restore();
-
-        // land (middle)
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const land = ctx.createLinearGradient(0, yTop + bandH*0.34, 0, yTop + bandH*0.70);
-        land.addColorStop(0.0, 'rgba(90,220,180,0.14)');
-        land.addColorStop(0.55,'rgba(40,170,140,0.16)');
-        land.addColorStop(1.0, 'rgba(20,120,120,0.12)');
-        ctx.fillStyle = land;
-        ctx.fillRect(cx-r, yTop + bandH*0.34, r*2, bandH*0.36);
-
-        // hills silhouettes scrolling
-        ctx.save();
-        ctx.translate(cx, yTop + bandH*0.64);
-        ctx.rotate(Math.sin(tSec*0.06)*0.01);
-        ctx.globalAlpha = 0.55;
-        ctx.fillStyle = 'rgba(0,0,0,0.10)';
-        const scroll = (tSec*10) % (r*0.9);
-        for(let k=-2;k<3;k++){
-          const x0 = -r + k*r*0.9 - scroll;
-          ctx.beginPath();
-          ctx.moveTo(x0, 0);
-          ctx.quadraticCurveTo(x0 + r*0.22, -r*0.10, x0 + r*0.44, 0);
-          ctx.quadraticCurveTo(x0 + r*0.66, r*0.08, x0 + r*0.88, 0);
-          ctx.lineTo(x0 + r*0.88, r*0.22);
-          ctx.lineTo(x0, r*0.22);
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.restore();
-
-        // tiny settlement lights
-        ctx.globalAlpha = 0.35;
-        for(let i=0;i<70;i++){
-          const xx = cx + (Math.sin(i*12.3)+Math.cos(i*3.7))*r*0.35;
-          const yy = yTop + bandH*(0.40 + 0.24*((Math.sin(i*1.9)+1)*0.5));
-          ctx.fillStyle = (i%3===0) ? 'rgba(255,255,255,0.10)' : 'rgba(170,255,240,0.10)';
-          ctx.fillRect(xx, yy, 1, 1);
-        }
-        ctx.restore();
-
-        // sky (top third)
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const sky = ctx.createLinearGradient(0, yTop, 0, yTop + bandH*0.40);
-        sky.addColorStop(0.0, 'rgba(200,235,255,0.14)');
-        sky.addColorStop(0.6, 'rgba(168,160,255,0.12)');
-        sky.addColorStop(1.0, 'rgba(100,160,255,0.10)');
-        ctx.fillStyle = sky;
-        ctx.fillRect(cx-r, yTop, r*2, bandH*0.40);
-
-        // clouds
-        ctx.globalAlpha = 0.75;
-        const cScroll = (tSec*14) % (r*1.6);
-        for(let i=0;i<7;i++){
-          const px = cx - r + i*r*0.55 + (cScroll*-1);
-          const py = yTop + bandH*(0.10 + 0.12*Math.sin(i*1.7));
-          const cw = r*0.46;
-          const ch = r*0.20;
-          const puff = ctx.createRadialGradient(px + cw*0.35, py + ch*0.45, 1, px + cw*0.35, py + ch*0.45, cw*0.55);
-          puff.addColorStop(0.0, 'rgba(255,255,255,0.10)');
-          puff.addColorStop(0.6, 'rgba(255,255,255,0.06)');
-          puff.addColorStop(1.0, 'rgba(255,255,255,0)');
-          ctx.fillStyle = puff;
-          ctx.fillRect(px, py, cw, ch);
-        }
-        ctx.restore();
-
-        // texture noise
-        drawNoiseDisk(cx, cy, r, 520, 'rgba(255,255,255,1)', 0.06, tSec, 1.1);
-        drawNoiseDisk(cx, cy, r, 520, 'rgba(143,243,255,1)', 0.035, tSec, 1.6);
-
-        // shading overlay
-        ctx.save();
-        ctx.globalCompositeOperation = 'multiply';
-        ctx.fillStyle = shade;
-        ctx.fillRect(cx-r, cy-r, r*2, r*2);
-        ctx.restore();
-
-        // inner highlight
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const hl = ctx.createRadialGradient(cx - r*0.25, cy - r*0.25, r*0.10, cx - r*0.25, cy - r*0.25, r*0.80);
-        hl.addColorStop(0.0, 'rgba(255,255,255,0.12)');
-        hl.addColorStop(0.55,'rgba(255,255,255,0.04)');
-        hl.addColorStop(1.0, 'rgba(255,255,255,0)');
-        ctx.fillStyle = hl;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-
-        ctx.restore(); // clip
-
-        // ring edge line (interactive hint)
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI*2);
-        ctx.stroke();
-        ctx.restore();
-
-        // subtle labels (only on planet scene)
-        if (scene === SCENE.PLANET){
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.font = '12px "Press Start 2P", ui-monospace';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = 'rgba(244,248,255,0.65)';
-          ctx.shadowColor = 'rgba(0,0,0,0.6)';
-          ctx.shadowBlur = 10;
-
-          ctx.fillText('tap rim = SKY', cx, cy - r - 18);
-          ctx.fillText('tap land = LAND', cx, cy + r*0.15);
-          ctx.fillText('tap ocean = SEA', cx, cy + r + 22);
-          ctx.restore();
-        }
-
-        ctx.restore(); // zoom transform
-      }
-
-      function startPlanetZoom(targetScale, targetOffsetX=0, targetOffsetY=0){
-        planet.zooming = true;
-        planet.zoomFrom = { x:0, y:0, s:1 };
-        planet.zoomTo   = { x:targetOffsetX, y:targetOffsetY, s:targetScale };
-        planet.zoomT0 = performance.now();
-      }
-
-      function planetHitTest(x, y){
-        const dx = x - planet.cx;
-        const dy = y - planet.cy;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist > planet.r*1.12) return null;
-
-        // rim/atmosphere: outer band
-        if (dist >= planet.r*0.92 && dist <= planet.r*1.12) return 'rim';
-
-        // inside planet: determine band by normalized y
-        const ny = (dy / planet.r); // -1 top to +1 bottom
-        if (ny < -0.20) return 'sky';
-        if (ny <  0.30) return 'land';
-        return 'sea';
-      }
-
-      // ---------- BIOMES: Unique procedural creatures per session ----------
-      const creatures = [];
-      let creatureFingerprints = new Set();
-      let lastCreatureTapMs = 0;
-
-      const BIO_FACTS = {
-        sky: [
-          "Kitty Cloud Boo — floats where the air is warm.",
-          "Nimbus Pup Boo — rides gentle winds to new places.",
-          "Starwing Boo — flaps softly through sparkly night.",
-          "Halo Manta Boo — glides in slow circles, calm and kind.",
-          "Puff Bunny Boo — hops between clouds without a sound."
-        ],
-        land: [
-          "Moss Pup Boo — likes soft steps and leafy shade.",
-          "Sprout Deer Boo — grows tiny blooms when it feels safe.",
-          "Pebble Buddy Boo — slow and steady, always exploring.",
-          "Fern Fox Boo — sneaks through grass like a little whisper.",
-          "Bloom Turtle Boo — carries a garden on its back."
-        ],
-        sea: [
-          "Ribbon Fish Boo — swims like a floating ribbon.",
-          "Bubble Jelly Boo — drifts and glows, very gently.",
-          "Lantern Ray Boo — shines softly in the deep blue.",
-          "Shell Snaillo Boo — travels slowly with a calm heart.",
-          "Coral Sprite Boo — shimmers like a tiny underwater star."
-        ]
-      };
-
-      function biomePalette(biome){
-        if (biome === SCENE.SKY){
-          return { hMin: 185, hMax: 265, sMin: 58, sMax: 86, lMin: 58, lMax: 76 };
-        }
-        if (biome === SCENE.LAND){
-          return { hMin: 120, hMax: 190, sMin: 52, sMax: 82, lMin: 46, lMax: 68 };
-        }
-        return { hMin: 195, hMax: 245, sMin: 55, sMax: 88, lMin: 44, lMax: 66 };
-      }
-
-      function hsl(h,s,l,a=1){
-        return `hsla(${h|0},${s|0}%,${l|0}%,${a})`;
-      }
-
-      function genCreatureDNA(biome){
-        const pal = biomePalette(biome);
-
-        const bodyType = (() => {
-          if (biome === SCENE.SKY)  return ['kittyCloud','haloManta','puffBunny','starWing','balloonPuff'][Math.floor(Math.random()*5)];
-          if (biome === SCENE.LAND) return ['mossPup','sproutDeer','pebbleBuddy','fernFox','bloomTurtle'][Math.floor(Math.random()*5)];
-          return ['ribbonFish','bubbleJelly','lanternRay','shellSnaillo','coralSprite'][Math.floor(Math.random()*5)];
-        })();
-
-        const ears = (biome === SCENE.SKY)
-          ? ['none','kitty','bunny','tinyHorns'][Math.floor(Math.random()*4)]
-          : ['none','tiny','leafy'][Math.floor(Math.random()*3)];
-
-        const face = ['happy','sleepy','surprised','calm'][Math.floor(Math.random()*4)];
-        const acc  = (Math.random() < 0.18) ? ['starCharm','halo','cape','sparkTrail'][Math.floor(Math.random()*4)] : 'none';
-
-        const hue = rand(pal.hMin, pal.hMax);
-        const sat = rand(pal.sMin, pal.sMax);
-        const lit = rand(pal.lMin, pal.lMax);
-        const hue2 = (hue + rand(-30, 30) + 360) % 360;
-
-        const size = rand(18, 34);
-        const puffCount = Math.floor(rand(3, 7));
-        const wobble = rand(0.7, 1.5);
-        const drift = rand(0.7, 1.4);
-
-        const dna = {
-          biome, bodyType, ears, face, acc,
-          hue, sat, lit, hue2,
-          size, puffCount, wobble, drift,
-          eyeSpacing: rand(0.18, 0.34),
-          eyeY: rand(-0.06, 0.10),
-          mouth: rand(0.0, 1.0),
-          outline: rand(0.6, 1.6),
-          sparkle: rand(0.0, 1.0),
-          tail: rand(0.0, 1.0),
-          fin: rand(0.0, 1.0),
-          spots: Math.floor(rand(0, 8)),
-          cheek: Math.random() < 0.55
-        };
-
-        return dna;
-      }
-
-      function fingerprintDNA(d){
-        // quantize so uniqueness is meaningful
-        const q = (v, step)=> Math.round(v/step)*step;
-        const obj = {
-          b:d.biome, t:d.bodyType, e:d.ears, f:d.face, a:d.acc,
-          h:q(d.hue,6), s:q(d.sat,6), l:q(d.lit,6), h2:q(d.hue2,8),
-          sz:q(d.size,2), pc:d.puffCount,
-          es:q(d.eyeSpacing,0.03), ey:q(d.eyeY,0.03),
-          m:q(d.mouth,0.08), o:q(d.outline,0.2),
-          sp:q(d.sparkle,0.1), ta:q(d.tail,0.1), fi:q(d.fin,0.1),
-          so:d.spots, ch:d.cheek
-        };
-        return hashStr(JSON.stringify(obj));
-      }
-
-      function initCreatures(biome){
-        creatures.length = 0;
-        creatureFingerprints = new Set();
-
-        const count = (biome === SCENE.SKY) ? 8 : (biome === SCENE.LAND) ? 8 : 8;
-
-        for (let i=0;i<count;i++){
-          let dna, fp;
-          let tries = 0;
-          do{
-            dna = genCreatureDNA(biome);
-            fp = fingerprintDNA(dna);
-            tries++;
-          }while(creatureFingerprints.has(fp) && tries < 60);
-
-          creatureFingerprints.add(fp);
-
-          const zone = biomeZoneRect(biome);
-          const x = rand(zone.x0 + 40, zone.x1 - 40);
-          const y = rand(zone.y0 + 40, zone.y1 - 40);
-
-          creatures.push({
-            id: `${biome}-${i}-${fp}`,
-            dna,
-            x, y,
-            vx: rand(-18, 18),
-            vy: rand(-14, 14),
-            baseSize: dna.size,
-            scale: 1,
-            swell: 0,
-            swellT0: 0,
-            swellUp: 820,
-            swellDown: 520,
-            state: 'wander',
-            t0: performance.now(),
-            targetX: x,
-            targetY: y,
-            nextWanderMs: performance.now() + rand(900, 1900),
-            bobPhase: Math.random() * Math.PI*2,
-            flapPhase: Math.random() * Math.PI*2,
-            depth: rand(0.85, 1.15)
-          });
-        }
-      }
-
-      function biomeZoneRect(biome){
-        // keep creatures in a comfy region
-        if (biome === SCENE.SKY){
-          return { x0: 0, x1: w, y0: 80, y1: h*0.86 };
-        }
-        if (biome === SCENE.LAND){
-          return { x0: 0, x1: w, y0: 90, y1: h*0.90 };
-        }
-        return { x0: 0, x1: w, y0: 90, y1: h*0.90 };
-      }
-
-      function creatureHitTest(x,y){
-        for (let i=creatures.length-1;i>=0;i--){
-          const c = creatures[i];
-          const rr = (c.baseSize * 1.5) * c.depth;
-          const dx = x - c.x;
-          const dy = y - c.y;
-          if (dx*dx + dy*dy <= rr*rr) return i;
-        }
-        return -1;
-      }
-
-      function startCreatureSwell(c, nowMs){
-        c.swellT0 = nowMs;
-        c.swell = 1;
-        c.state = 'swellUp';
-      }
-
-      function updateCreature(c, nowMs, dt, biome){
-        // swell animation
-        if (c.state === 'swellUp'){
-          const t = clamp((nowMs - c.swellT0)/c.swellUp, 0, 1);
-          c.scale = lerp(1.0, 1.85, easeOutCubic(t));
-          if (t >= 1){
-            c.state = 'swellDown';
-            c.swellT0 = nowMs;
-          }
-        } else if (c.state === 'swellDown'){
-          const t = clamp((nowMs - c.swellT0)/c.swellDown, 0, 1);
-          c.scale = lerp(1.85, 1.0, easeOutCubic(t));
-          if (t >= 1){
-            c.state = 'wander';
-          }
-        } else {
-          // idle micro motion
-          c.scale = 1 + 0.02*Math.sin((nowMs*0.001)*2*Math.PI/(5.4 + c.dna.wobble));
-        }
-
-        // wander targets
-        if (nowMs > c.nextWanderMs && c.state === 'wander'){
-          const zone = biomeZoneRect(biome);
-          c.targetX = rand(zone.x0 + 50, zone.x1 - 50);
-          c.targetY = rand(zone.y0 + 80, zone.y1 - 60);
-          c.nextWanderMs = nowMs + rand(1100, 2200);
-        }
-
-        // steering
-        const dx = c.targetX - c.x;
-        const dy = c.targetY - c.y;
-        const dist = Math.sqrt(dx*dx + dy*dy) + 1e-6;
-
-        // biome motion signature
-        let maxSp = 28 * c.dna.drift;
-        let turn = 0.85;
-
-        if (biome === SCENE.SKY){
-          maxSp = 34 * c.dna.drift;
-          turn = 0.95;
-          // hover bob
-          c.bobPhase += dt * (0.8 + c.dna.wobble*0.25);
-        } else if (biome === SCENE.LAND){
-          maxSp = 26 * c.dna.drift;
-          turn = 0.75;
-        } else {
-          // sea: sin swim
-          maxSp = 30 * c.dna.drift;
-          turn = 0.88;
-          c.bobPhase += dt * (1.05 + c.dna.wobble*0.35);
-        }
-
-        const desiredVx = (dx / dist) * maxSp;
-        const desiredVy = (dy / dist) * maxSp;
-
-        c.vx = lerp(c.vx, desiredVx, clamp(dt*turn, 0, 1));
-        c.vy = lerp(c.vy, desiredVy, clamp(dt*turn, 0, 1));
-
-        // apply
-        c.x += c.vx * dt;
-        c.y += c.vy * dt;
-
-        // boundaries
-        const zone = biomeZoneRect(biome);
-        const pad = 26;
-        if (c.x < zone.x0 + pad){ c.x = zone.x0 + pad; c.vx *= -0.7; c.targetX = zone.x0 + pad + 60; }
-        if (c.x > zone.x1 - pad){ c.x = zone.x1 - pad; c.vx *= -0.7; c.targetX = zone.x1 - pad - 60; }
-        if (c.y < zone.y0 + pad){ c.y = zone.y0 + pad; c.vy *= -0.7; c.targetY = zone.y0 + pad + 60; }
-        if (c.y > zone.y1 - pad){ c.y = zone.y1 - pad; c.vy *= -0.7; c.targetY = zone.y1 - pad - 60; }
-
-        // biome-specific offsets
-        if (biome === SCENE.SKY){
-          c.y += Math.sin(c.bobPhase + c.id.length) * 0.35;
-        }
-        if (biome === SCENE.SEA){
-          // gentle sine swim
-          c.y += Math.sin(c.bobPhase + c.id.length) * 0.55;
-          c.x += Math.sin(c.bobPhase*0.7 + c.id.length) * 0.35;
-        }
-      }
-
-      // ---------- Creature Drawing (procedural “soft 16-bit-ish”) ----------
-      function drawSoftOutlinePath(pathFn, stroke, width){
-        ctx.save();
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = width;
-        ctx.globalAlpha *= 0.55;
-        pathFn();
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function drawFace(dna, cx, cy, s, tSec){
-        const eyeY = cy + dna.eyeY * s;
-        const es = dna.eyeSpacing * s;
-        const eyeR = Math.max(1.2, s*0.08);
-        const blink = 0.15 + 0.85 * Math.max(0, Math.sin(tSec*0.8 + dna.mouth*9.1));
-        const blinkT = (blink > 0.95) ? 0.2 : 1.0;
-
-        // cheeks
-        if (dna.cheek){
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.fillStyle = hsl((dna.hue2+25)%360, dna.sat, dna.lit+8, 0.10);
-          ctx.beginPath(); ctx.arc(cx - es*0.75, eyeY + s*0.10, s*0.12, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.arc(cx + es*0.75, eyeY + s*0.10, s*0.12, 0, Math.PI*2); ctx.fill();
-          ctx.restore();
-        }
-
-        // eyes
-        ctx.save();
-        ctx.fillStyle = 'rgba(20,30,55,0.55)';
-        if (dna.face === 'sleepy'){
-          ctx.globalAlpha = 0.65;
-        }
-        // left
-        ctx.beginPath();
-        ctx.ellipse(cx - es, eyeY, eyeR, eyeR*blinkT, 0, 0, Math.PI*2);
-        ctx.fill();
-        // right
-        ctx.beginPath();
-        ctx.ellipse(cx + es, eyeY, eyeR, eyeR*blinkT, 0, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-
-        // mouth
-        ctx.save();
-        ctx.strokeStyle = 'rgba(20,30,55,0.45)';
-        ctx.lineWidth = Math.max(1, s*0.05);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        const my = eyeY + s*0.20;
-        const mw = s*0.18;
-        if (dna.face === 'surprised'){
-          ctx.beginPath();
-          ctx.arc(cx, my, s*0.08, 0, Math.PI*2);
-          ctx.stroke();
-        } else if (dna.face === 'happy'){
-          ctx.moveTo(cx - mw, my);
-          ctx.quadraticCurveTo(cx, my + s*0.10, cx + mw, my);
-          ctx.stroke();
-        } else {
-          // calm/sleepy
-          ctx.moveTo(cx - mw*0.9, my);
-          ctx.lineTo(cx + mw*0.9, my);
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      function drawAccessory(dna, cx, cy, s, tSec){
-        if (dna.acc === 'none') return;
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        if (dna.acc === 'halo'){
-          ctx.strokeStyle = hsl((dna.hue2+20)%360, dna.sat, dna.lit+12, 0.22);
-          ctx.lineWidth = Math.max(1, s*0.08);
-          ctx.beginPath();
-          ctx.ellipse(cx, cy - s*0.62, s*0.42, s*0.14, 0, 0, Math.PI*2);
-          ctx.stroke();
-        }
-        if (dna.acc === 'starCharm'){
-          const a = tSec*0.6;
-          const x = cx + Math.cos(a)*s*0.55;
-          const y = cy + Math.sin(a*1.1)*s*0.25;
-          ctx.fillStyle = 'rgba(255,255,255,0.20)';
-          ctx.beginPath();
-          for (let i=0;i<5;i++){
-            const ang = i*(Math.PI*2/5) - Math.PI/2;
-            const rx = x + Math.cos(ang)*s*0.16;
-            const ry = y + Math.sin(ang)*s*0.16;
-            if (i===0) ctx.moveTo(rx,ry); else ctx.lineTo(rx,ry);
-            const ang2 = ang + Math.PI/5;
-            ctx.lineTo(x + Math.cos(ang2)*s*0.07, y + Math.sin(ang2)*s*0.07);
-          }
-          ctx.closePath();
-          ctx.fill();
-        }
-        if (dna.acc === 'cape'){
-          ctx.fillStyle = hsl((dna.hue2+40)%360, dna.sat, dna.lit, 0.10);
-          ctx.beginPath();
-          ctx.moveTo(cx - s*0.10, cy + s*0.30);
-          ctx.quadraticCurveTo(cx - s*0.65, cy + s*0.40, cx - s*0.25, cy + s*0.86);
-          ctx.quadraticCurveTo(cx, cy + s*0.66, cx + s*0.25, cy + s*0.86);
-          ctx.quadraticCurveTo(cx + s*0.65, cy + s*0.40, cx + s*0.10, cy + s*0.30);
-          ctx.closePath();
-          ctx.fill();
-        }
-        if (dna.acc === 'sparkTrail'){
-          ctx.fillStyle = 'rgba(255,255,255,0.10)';
-          for(let i=0;i<6;i++){
-            const x = cx - s*(0.6 + i*0.12);
-            const y = cy + Math.sin(tSec*1.8 + i*1.1)*s*0.10;
-            ctx.beginPath();
-            ctx.arc(x, y, s*(0.06 - i*0.006), 0, Math.PI*2);
-            ctx.fill();
-          }
-        }
-        ctx.restore();
-      }
-
-      function drawCreature(c, tSec, biome){
-        const d = c.dna;
-        const base = c.baseSize * c.depth;
-        const s = base * c.scale;
-
-        // glow halo
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const halo = ctx.createRadialGradient(c.x, c.y, s*0.25, c.x, c.y, s*2.2);
-        halo.addColorStop(0.0, hsl(d.hue2, d.sat, d.lit+10, 0.12));
-        halo.addColorStop(0.55, hsl(d.hue, d.sat, d.lit, 0.05));
-        halo.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = halo;
-        ctx.fillRect(0,0,w,h);
-        ctx.restore();
-
-        // body styles
-        const fillA = hsl(d.hue, d.sat, d.lit, 0.42);
-        const fillB = hsl(d.hue2, d.sat, d.lit-8, 0.26);
-        const outline = 'rgba(255,255,255,0.10)';
-
-        // choose archetype draw
-        const type = d.bodyType;
-
-        // “puffy” helper
-        function puffBlob(cx, cy, w0, h0, puffs){
-          ctx.beginPath();
-          for (let i=0;i<puffs;i++){
-            const a = (i/puffs)*Math.PI*2;
-            const rr = 1 + 0.10*Math.sin(i*2.2 + d.sparkle*10.0);
-            const px = cx + Math.cos(a) * w0*0.32 * rr;
-            const py = cy + Math.sin(a) * h0*0.26 * rr;
-            ctx.moveTo(px + w0*0.22, py);
-            ctx.ellipse(px, py, w0*0.22, h0*0.18, 0, 0, Math.PI*2);
-          }
-          // no close needed: overlapping ellipses fill as blob
-        }
-
-        // base gradient fill
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-
-        // body clip (so highlights behave)
-        ctx.beginPath();
-        if (type === 'kittyCloud' || type === 'balloonPuff' || type === 'puffBunny' || type === 'bubbleJelly'){
-          puffBlob(c.x, c.y, s*1.05, s*0.82, d.puffCount);
-        } else if (type === 'haloManta' || type === 'lanternRay'){
-          ctx.ellipse(c.x, c.y, s*0.90, s*0.55, 0, 0, Math.PI*2);
-        } else if (type === 'ribbonFish'){
-          ctx.ellipse(c.x, c.y, s*1.05, s*0.36, 0.20*Math.sin(tSec + d.fin*3.1), 0, Math.PI*2);
-        } else if (type === 'mossPup' || type === 'fernFox' || type === 'sproutDeer'){
-          ctx.ellipse(c.x, c.y, s*0.70, s*0.52, 0, 0, Math.PI*2);
-        } else if (type === 'pebbleBuddy' || type === 'shellSnaillo'){
-          ctx.ellipse(c.x, c.y, s*0.62, s*0.56, 0, 0, Math.PI*2);
-        } else if (type === 'bloomTurtle' || type === 'coralSprite'){
-          ctx.ellipse(c.x, c.y, s*0.74, s*0.58, 0, 0, Math.PI*2);
-        } else {
-          ctx.ellipse(c.x, c.y, s*0.70, s*0.55, 0, 0, Math.PI*2);
-        }
-        ctx.clip();
-
-        const bodyGrad = ctx.createRadialGradient(c.x - s*0.25, c.y - s*0.28, 1, c.x - s*0.25, c.y - s*0.28, s*1.2);
-        bodyGrad.addColorStop(0.0, 'rgba(255,255,255,0.20)');
-        bodyGrad.addColorStop(0.25, fillA);
-        bodyGrad.addColorStop(0.70, fillB);
-        bodyGrad.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = bodyGrad;
-        ctx.fillRect(c.x - s*2, c.y - s*2, s*4, s*4);
-
-        // spots / sparkle
-        if (d.spots > 0){
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          for(let i=0;i<d.spots;i++){
-            const a = (i/d.spots)*Math.PI*2 + d.spots*0.7;
-            const rr = s * rand(0.12, 0.46);
-            const px = c.x + Math.cos(a) * rr;
-            const py = c.y + Math.sin(a*1.12) * rr * 0.75;
-            ctx.fillStyle = hsl((d.hue2+30)%360, d.sat, d.lit+14, 0.10);
-            ctx.beginPath();
-            ctx.arc(px, py, rand(1.2, 2.4), 0, Math.PI*2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-
-        // highlight
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const hl = ctx.createRadialGradient(c.x - s*0.30, c.y - s*0.30, 1, c.x - s*0.30, c.y - s*0.30, s*0.95);
-        hl.addColorStop(0.0, 'rgba(255,255,255,0.20)');
-        hl.addColorStop(0.45,'rgba(255,255,255,0.06)');
-        hl.addColorStop(1.0, 'rgba(255,255,255,0)');
-        ctx.fillStyle = hl;
-        ctx.fillRect(c.x - s*2, c.y - s*2, s*4, s*4);
-        ctx.restore();
-
-        ctx.restore(); // clip
-
-        // outline pass (soft)
-        drawSoftOutlinePath(() => {
-          ctx.beginPath();
-          if (type === 'kittyCloud' || type === 'balloonPuff' || type === 'puffBunny' || type === 'bubbleJelly'){
-            puffBlob(c.x, c.y, s*1.05, s*0.82, d.puffCount);
-          } else if (type === 'haloManta' || type === 'lanternRay'){
-            ctx.ellipse(c.x, c.y, s*0.90, s*0.55, 0, 0, Math.PI*2);
-          } else if (type === 'ribbonFish'){
-            ctx.ellipse(c.x, c.y, s*1.05, s*0.36, 0.20*Math.sin(tSec + d.fin*3.1), 0, Math.PI*2);
-          } else {
-            ctx.ellipse(c.x, c.y, s*0.70, s*0.55, 0, 0, Math.PI*2);
-          }
-        }, outline, Math.max(1, d.outline));
-
-        // ears (sky types mostly)
-        if ((d.ears !== 'none') && (biome === SCENE.SKY || type === 'kittyCloud' || type === 'puffBunny')){
-          ctx.save();
-          ctx.globalCompositeOperation = 'lighter';
-          const earCol = hsl(d.hue2, d.sat, d.lit+6, 0.18);
-          ctx.fillStyle = earCol;
-          const ex = c.x, ey = c.y - s*0.42;
-
-          const earW = s*0.18;
-          const earH = s*0.20;
-          const tilt = (d.ears === 'bunny') ? 0.10 : 0.0;
-
-          // left
-          ctx.beginPath();
-          ctx.ellipse(ex - s*0.28, ey, earW, earH*(d.ears==='bunny'?1.45:1.0), -0.25+tilt, 0, Math.PI*2);
-          ctx.fill();
-          // right
-          ctx.beginPath();
-          ctx.ellipse(ex + s*0.28, ey, earW, earH*(d.ears==='bunny'?1.45:1.0), 0.25-tilt, 0, Math.PI*2);
-          ctx.fill();
-
-          // tiny horns
-          if (d.ears === 'tinyHorns'){
-            ctx.fillStyle = 'rgba(255,255,255,0.10)';
-            ctx.beginPath();
-            ctx.ellipse(ex - s*0.30, ey - s*0.05, earW*0.65, earH*0.60, -0.25, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(ex + s*0.30, ey - s*0.05, earW*0.65, earH*0.60, 0.25, 0, Math.PI*2); ctx.fill();
-          }
-          ctx.restore();
-        }
-
-        // simple tails/fins
-        if (type === 'ribbonFish' || biome === SCENE.SEA){
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.strokeStyle = hsl(d.hue2, d.sat, d.lit+8, 0.14);
-          ctx.lineWidth = Math.max(1, s*0.08);
-          ctx.lineCap = 'round';
-          ctx.beginPath();
-          ctx.moveTo(c.x + s*0.60, c.y);
-          ctx.quadraticCurveTo(c.x + s*(0.85 + 0.12*Math.sin(tSec*1.3 + d.fin*6.2)), c.y + s*0.18, c.x + s*1.05, c.y + s*0.02);
-          ctx.stroke();
-          ctx.restore();
-        } else if (type === 'kittyCloud' || type === 'fernFox'){
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.strokeStyle = 'rgba(255,255,255,0.10)';
-          ctx.lineWidth = Math.max(1, s*0.08);
-          ctx.lineCap = 'round';
-          ctx.beginPath();
-          ctx.moveTo(c.x + s*0.45, c.y + s*0.10);
-          ctx.quadraticCurveTo(c.x + s*0.70, c.y + s*0.22, c.x + s*(0.80 + 0.12*Math.sin(tSec*1.2 + d.tail*7.0)), c.y + s*(0.02));
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // faces (only if big enough / always ok)
-        drawFace(d, c.x, c.y, s, tSec);
-        drawAccessory(d, c.x, c.y, s, tSec);
-
-        // small biome-specific extras
-        if (biome === SCENE.SEA){
-          // bubbles
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.fillStyle = 'rgba(255,255,255,0.08)';
-          for (let i=0;i<3;i++){
-            const bx = c.x + Math.sin(tSec*1.0 + i*1.7 + d.spots)*s*0.35;
-            const by = c.y - s*(0.35 + 0.10*i) + Math.cos(tSec*1.2 + i)*s*0.10;
-            ctx.beginPath();
-            ctx.arc(bx, by, s*(0.05 - i*0.01), 0, Math.PI*2);
-            ctx.fill();
-          }
-          ctx.restore();
-        }
-      }
-
-      // ---------- BIOME BACKGROUNDS ----------
-      function drawBiomeBackground(tSec, biome){
-        // still spacey but tinted
-        drawSpaceBackground(tSec);
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-
-        if (biome === SCENE.SKY){
-          const g = ctx.createRadialGradient(w*0.5, h*0.25, 0, w*0.5, h*0.25, Math.min(w,h)*0.9);
-          g.addColorStop(0.0, 'rgba(200,235,255,0.12)');
-          g.addColorStop(0.45,'rgba(168,160,255,0.10)');
-          g.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = g;
-          ctx.fillRect(0,0,w,h);
-
-          // soft cloud bands
-          for(let i=0;i<10;i++){
-            const yy = h*(0.18 + i*0.07) + Math.sin(tSec*0.6 + i*1.4)*10;
-            const cloud = ctx.createLinearGradient(0, yy, w, yy);
-            cloud.addColorStop(0.0,'rgba(255,255,255,0)');
-            cloud.addColorStop(0.45,'rgba(255,255,255,0.04)');
-            cloud.addColorStop(0.55,'rgba(255,255,255,0.05)');
-            cloud.addColorStop(1.0,'rgba(255,255,255,0)');
-            ctx.fillStyle = cloud;
-            ctx.fillRect(0, yy, w, 18);
-          }
-        }
-
-        if (biome === SCENE.LAND){
-          const g = ctx.createRadialGradient(w*0.45, h*0.62, 0, w*0.45, h*0.62, Math.min(w,h)*0.95);
-          g.addColorStop(0.0, 'rgba(90,220,180,0.10)');
-          g.addColorStop(0.55,'rgba(40,170,140,0.08)');
-          g.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = g;
-          ctx.fillRect(0,0,w,h);
-
-          // ground haze
-          const hz = ctx.createLinearGradient(0, h*0.55, 0, h);
-          hz.addColorStop(0.0, 'rgba(0,0,0,0)');
-          hz.addColorStop(1.0, 'rgba(0,0,0,0.18)');
-          ctx.fillStyle = hz;
-          ctx.fillRect(0,0,w,h);
-
-          // tiny firefly dots
-          ctx.fillStyle = 'rgba(255,255,255,0.06)';
-          for(let i=0;i<180;i++){
-            const x = (Math.sin(i*12.3)+1)*0.5*w + Math.sin(tSec*0.2 + i)*20;
-            const y = h*(0.25 + 0.70*((Math.cos(i*3.4)+1)*0.5));
-            ctx.fillRect(x, y, 1, 1);
-          }
-        }
-
-        if (biome === SCENE.SEA){
-          const g = ctx.createRadialGradient(w*0.52, h*0.55, 0, w*0.52, h*0.55, Math.min(w,h)*1.1);
-          g.addColorStop(0.0, 'rgba(80,220,255,0.10)');
-          g.addColorStop(0.55,'rgba(40,120,255,0.08)');
-          g.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = g;
-          ctx.fillRect(0,0,w,h);
-
-          // depth gradient
-          const deep = ctx.createLinearGradient(0, 0, 0, h);
-          deep.addColorStop(0.0, 'rgba(0,0,0,0.02)');
-          deep.addColorStop(1.0, 'rgba(0,0,0,0.30)');
-          ctx.fillStyle = deep;
-          ctx.fillRect(0,0,w,h);
-
-          // rising bubbles
-          ctx.fillStyle = 'rgba(255,255,255,0.04)';
-          for(let i=0;i<90;i++){
-            const x = (i*97 % 1000)/1000 * w;
-            const y = (h + (i*53)%h) - (tSec*22 + i*19) % (h+120);
-            const r = 1 + ((i*17)%10)/10;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI*2);
-            ctx.fill();
-          }
-        }
-
-        ctx.restore();
-
-        // biome title hint
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.font = '12px "Press Start 2P", ui-monospace';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(244,248,255,0.58)';
-        const label = (biome === SCENE.SKY) ? 'SKY BIOME' : (biome === SCENE.LAND) ? 'LAND BIOME' : 'SEA BIOME';
-        ctx.fillText(label, w*0.5, 66);
-        ctx.restore();
-      }
-
-      // ---------- SPACE INPUT + BIOME/PLANET INPUT ----------
-      let allowInput = false;
-
+      // ---------- Input ----------
       canvas.addEventListener('pointerdown', (e) => {
         if (!allowInput) return;
 
@@ -2093,96 +985,34 @@
         const y = (e.clientY - rect.top);
         const now = performance.now();
 
-        if (scene === SCENE.SPACE){
-          const idx = hitSatellite(x,y);
-          if (idx !== -1){
-            const s = satellites[idx];
-            startSatelliteSwell(s, now);
-            playUniverseMessage();
+        const idx = hitSatellite(x,y);
+        if (idx !== -1){
+          const s = satellites[idx];
 
-            // dragging
-            drag.active = true;
-            drag.satIndex = idx;
-            drag.pointerId = e.pointerId;
-            s.dragging = true;
-            s.x = x; s.y = y;
-            canvas.setPointerCapture?.(e.pointerId);
-            return;
-          }
+          // Satellite interaction:
+          startSatelliteSwell(s, now);
 
-          if (inMainStarHit(x,y)){
-            startMainBloom(now);
-            return;
-          }
+          // Show a calm universe message (only if none currently playing)
+          playUniverseMessage();
+
+          // Dragging
+          drag.active = true;
+          drag.satIndex = idx;
+          drag.pointerId = e.pointerId;
+          s.dragging = true;
+
+          s.x = x; s.y = y;
+          canvas.setPointerCapture?.(e.pointerId);
+          return;
         }
 
-        if (scene === SCENE.PLANET){
-          const hit = planetHitTest(x,y);
-          if (!hit) return;
-
-          // zoom + enter biome
-          if (hit === 'rim' || hit === 'sky'){
-            startPlanetZoom(1.12, 0, -18);
-            // gentle delay then switch
-            setTimeout(() => goto(SCENE.SKY, true), 220);
-            return;
-          }
-          if (hit === 'land'){
-            startPlanetZoom(1.12, 0, 0);
-            setTimeout(() => goto(SCENE.LAND, true), 220);
-            return;
-          }
-          if (hit === 'sea'){
-            startPlanetZoom(1.12, 0, 18);
-            setTimeout(() => goto(SCENE.SEA, true), 220);
-            return;
-          }
-        }
-
-        if (scene === SCENE.SKY || scene === SCENE.LAND || scene === SCENE.SEA){
-          const idx = creatureHitTest(x,y);
-          if (idx !== -1){
-            const c = creatures[idx];
-            startCreatureSwell(c, now);
-
-            // direct movement gently toward tap
-            c.targetX = x;
-            c.targetY = y;
-            c.nextWanderMs = now + rand(700, 1400);
-
-            // show creature fact message (throttle + avoid overlap)
-            if (!messagePlaying){
-              const list = (scene === SCENE.SKY) ? BIO_FACTS.sky : (scene === SCENE.LAND) ? BIO_FACTS.land : BIO_FACTS.sea;
-              const txt = list[Math.floor(Math.random()*list.length)];
-              // small delay = "wonder"
-              setTimeout(() => {
-                if (!messagePlaying) {
-                  showMessage(txt);
-                  messagePlaying = true;
-                  clearMessageTimers();
-                  messageTimers.push(setTimeout(() => hideMessage(), 5600));
-                  messageTimers.push(setTimeout(() => { hideMessage(); messagePlaying = false; }, 7500));
-                }
-              }, 120);
-            }
-            return;
-          }
-
-          // tap empty space: invite creatures toward it softly
-          lastCreatureTapMs = now;
-          for (const c of creatures){
-            if (Math.random() < 0.55){
-              c.targetX = x + rand(-60, 60);
-              c.targetY = y + rand(-50, 50);
-              c.nextWanderMs = now + rand(650, 1300);
-            }
-          }
+        if (inMainStarHit(x,y)){
+          startMainBloom(now);
         }
       }, { passive:false });
 
       canvas.addEventListener('pointermove', (e) => {
         if (!allowInput) return;
-        if (scene !== SCENE.SPACE) return;
         if (!drag.active) return;
         if (drag.pointerId !== e.pointerId) return;
 
@@ -2214,91 +1044,58 @@
       canvas.addEventListener('pointerup', endDrag, { passive:true });
       canvas.addEventListener('pointercancel', endDrag, { passive:true });
 
-      // ---------- Start ----------
+      // ---------- Welcome / Start ----------
+      async function startMusic(){
+        try{
+          if (bgm && bgm.paused){
+            bgm.volume = 0.45;
+            await bgm.play();
+          }
+        }catch(_e){}
+      }
+
+      function setScreen(which){
+        welcome.classList.toggle('active', which === 'welcome');
+        play.classList.toggle('active', which === 'play');
+      }
+
       startBtn.addEventListener('click', async () => {
         await startMusic();
+        setScreen('play');
+        pressToPlay.style.display = 'block';
         allowInput = true;
-        history.length = 0;
-        goto(SCENE.SPACE, false);
       });
 
       // ---------- Animation loop ----------
-      let lastMs = performance.now();
-
       function tick(nowMs){
         const dt = (nowMs - lastMs) * 0.001;
         lastMs = nowMs;
         const tSec = nowMs * 0.001;
 
-        // base background always
-        drawSpaceBackground(tSec);
+        star.rot  += dt * 0.18;
+        star.rot2 += dt * 0.11;
 
-        if (scene === SCENE.SPACE){
-          // update + draw space toys
-          star.rot  += dt * 0.18;
-          star.rot2 += dt * 0.11;
+        updatePalette(nowMs);
+        updateMainBloom(nowMs);
 
-          updatePalette(nowMs);
-          updateMainBloom(nowMs);
+        updateSatellitePositions(dt);
+        for (const s of satellites) updateSatelliteSwell(s, nowMs);
 
-          updateSatellitePositions(dt);
-          for (const s of satellites) updateSatelliteSwell(s, nowMs);
+        drawBackground(tSec);
 
-          // satellites behind star
-          for (const s of satellites) drawSatellite(s);
+        // satellites behind star
+        for (const s of satellites) drawSatellite(s);
 
-          // main star
-          drawMainStar(tSec, nowMs);
-
-          // subtle instruction hint
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.font = '12px "Press Start 2P", ui-monospace';
-          ctx.textAlign = 'center';
-          ctx.fillStyle = 'rgba(244,248,255,0.45)';
-          ctx.fillText('tap satellites for facts', w*0.5, h - 52);
-          ctx.restore();
-        }
-
-        if (scene === SCENE.PLANET){
-          drawPlanetBoo(tSec);
-        }
-
-        if (scene === SCENE.SKY || scene === SCENE.LAND || scene === SCENE.SEA){
-          drawBiomeBackground(tSec, scene);
-
-          // draw a “planet shadow” vibe behind creatures for cohesiveness
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          const vign = ctx.createRadialGradient(w*0.5, h*0.52, 0, w*0.5, h*0.52, Math.max(w,h)*0.7);
-          vign.addColorStop(0.0, 'rgba(0,0,0,0)');
-          vign.addColorStop(1.0, 'rgba(0,0,0,0.22)');
-          ctx.fillStyle = vign;
-          ctx.fillRect(0,0,w,h);
-          ctx.restore();
-
-          for (const c of creatures){
-            updateCreature(c, nowMs, dt, scene);
-            drawCreature(c, tSec, scene);
-          }
-        }
+        // star
+        drawMainStar(tSec, nowMs);
 
         requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
 
-      // ---------- Enter planet scene hint ----------
-      // visit button is enabled only on space scene (updateButtons handles that)
-
-      // ---------- Visibility safety ----------
+      // Safety
       document.addEventListener('visibilitychange', () => {
         if (document.hidden){
-          // stop any playing message cleanly
-          messagePlaying = false;
-          clearMessageTimers();
-          hideMessage();
-
-          // reset star state gently
           star.state = 'idle';
           star.scale = 1;
           star.intensity = 1;
@@ -2312,34 +1109,13 @@
           drag.active = false;
           drag.satIndex = -1;
           drag.pointerId = null;
+
+          // stop any playing message cleanly
+          messagePlaying = false;
+          clearMessageTimers();
+          hideMessage();
         }
       });
-
-      // ---------- Boot ----------
-      setScreen(SCENE.WELCOME);
-      updateButtons();
-
-      // small onboarding message when first entering planet (once per session)
-      let planetHintShown = false;
-      function maybeShowPlanetHint(){
-        if (planetHintShown) return;
-        planetHintShown = true;
-        if (!messagePlaying){
-          messagePlaying = true;
-          clearMessageTimers();
-          showMessage("Welcome to Planet Boo…\nTap the rim for SKY, the land for LAND, or the ocean for SEA.");
-          messageTimers.push(setTimeout(() => hideMessage(), 5600));
-          messageTimers.push(setTimeout(() => { hideMessage(); messagePlaying = false; }, 7500));
-        }
-      }
-
-      // auto-show hint on planet entry
-      const _goto = goto;
-      goto = function(next, push=true){
-        _goto(next, push);
-        if (next === SCENE.PLANET) maybeShowPlanetHint();
-      };
-
     })();
   </script>
 </body>
