@@ -197,8 +197,9 @@
       transform: translateY(-6px);
       transition: opacity 520ms ease, transform 520ms ease;
     }
+    /* FIX: was opacity:0, so it never became visible */
     .messageCard.isVisible{
-      opacity: 0;
+      opacity: 1;
       transform: translateY(0);
     }
     .messageText{
@@ -273,6 +274,13 @@
 
   <button class="backBtn" id="backBtn" type="button" aria-label="Back">BACK</button>
 
+  <!-- FIX: message overlay DOM existed in CSS/JS logic but not in HTML -->
+  <div class="messageWrap" id="messageWrap" aria-live="polite">
+    <div class="messageCard" id="messageCard">
+      <p class="messageText" id="messageText"></p>
+    </div>
+  </div>
+
   <div class="ui">
     <div class="panel screen active" id="welcome">
       <div class="stack">
@@ -319,8 +327,11 @@
       const play = document.getElementById('play');
       const startBtn = document.getElementById('startBtn');
       const pressToPlay = document.getElementById('pressToPlay');
-
       const backBtn = document.getElementById('backBtn');
+
+      // FIX: wire message overlay elements (these were previously missing, causing a ReferenceError)
+      const messageCard = document.getElementById('messageCard');
+      const messageText = document.getElementById('messageText');
 
       // ---------- Sizing ----------
       let w=0, h=0, dpr=1;
@@ -460,11 +471,12 @@
         messageTimers = [];
       }
       function setMessageVisible(isVisible){
+        if (!messageCard) return;
         if (isVisible) messageCard.classList.add('isVisible');
         else messageCard.classList.remove('isVisible');
       }
       function showMessage(text){
-        messageText.textContent = text;
+        if (messageText) messageText.textContent = text;
         requestAnimationFrame(() => setMessageVisible(true));
       }
       function hideMessage(){ setMessageVisible(false); }
@@ -538,17 +550,11 @@
       };
 
       // ---------- Lanterns (lantern scene) ----------
-      // Updated to look much closer to your reference image:
-      // - many more lanterns
-      // - strong warm base glow + bright “flame” at the bottom
-      // - more rectangular sky-lantern silhouette
-      // - depth layering (big near, many small far)
       const LANTERN_COUNT = 16;
       const lanterns = [];
       let holidayOrder = [];
       let holidayPtr = 0;
 
-      // Bolder “photo-like” lantern colors (reds/oranges/yellows + a few purples/blues/white)
       const SKY_LANTERN_COLORS = [
         { name:"Red",     paper:{r:255,g: 75,b: 75}, rim:{r:255,g: 55,b: 35}, honey:{r:255,g:180,b: 90}, cream:{r:255,g:245,b:230} },
         { name:"Orange",  paper:{r:255,g:140,b: 45}, rim:{r:255,g: 95,b: 25}, honey:{r:255,g:190,b:105}, cream:{r:255,g:245,b:230} },
@@ -621,7 +627,6 @@
       }
 
       function bias01(power=2.0){
-        // 0..1 with bias toward 0 (farther/smaller)
         return Math.pow(Math.random(), power);
       }
 
@@ -635,23 +640,19 @@
         const maxY = h * 0.88;
 
         for (let i=0;i<LANTERN_COUNT;i++){
-          // depth: 0 = near, 1 = far (we bias toward far so we get many tiny distant lanterns)
           const z = clamp(0.10 + bias01(2.35) * 0.92, 0.10, 1.0);
 
-          // distribution: far lanterns trend higher; near lanterns can appear lower and larger
-          const yBias = lerp(0.18, 0.78, Math.pow(1 - z, 0.85)); // near -> lower
+          const yBias = lerp(0.18, 0.78, Math.pow(1 - z, 0.85));
           const y = clamp(
             lerp(minY, maxY, clamp(rand(yBias - 0.18, yBias + 0.22), 0, 1)),
             minY, maxY
           );
 
-          // some clustering like a photo: gentle horizontal banding + randomness
           const band = (Math.sin(i*0.55) * 0.08 + 0.5);
           const x = clamp(lerp(minX, maxX, clamp(rand(band - 0.25, band + 0.25), 0, 1)), minX, maxX);
 
-          // size: near lanterns are big; far lanterns are tiny
           const base = clamp(Math.min(w,h) * 0.060, 22, 44);
-          const scale = lerp(1.55, 0.38, z); // far smaller
+          const scale = lerp(1.55, 0.38, z);
           const rr = base * scale * rand(0.80, 1.12);
 
           const colorIndex = (Math.random() * SKY_LANTERN_COLORS.length) | 0;
@@ -668,7 +669,6 @@
             vx: rand(-6,6) * (1 - z),
             vy: rand(-5,5) * (1 - z),
 
-            // visuals
             r: rr,
             rot: rand(-0.07, 0.07),
             wob: rand(0, Math.PI*2),
@@ -677,7 +677,7 @@
             bob: rand(2, 8) * lerp(1.0, 0.55, z),
             flick: rand(0, Math.PI*2),
 
-            mode: 'cozy', // first tap flips to vivid (color cycle)
+            mode: 'cozy',
             vividIndex: colorIndex,
 
             glow: 0
@@ -746,7 +746,6 @@
         const r = obj.rBase * obj.scale;
         const intensity = obj.intensity;
 
-        // spill
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const spill = ctx.createRadialGradient(obj.cx, obj.cy, r*0.25, obj.cx, obj.cy, r*2.65);
@@ -759,7 +758,6 @@
 
         drawFlaresFor(obj, r, tSec, intensity);
 
-        // corona
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const corona = ctx.createRadialGradient(obj.cx, obj.cy, r*0.62, obj.cx, obj.cy, r*1.16);
@@ -772,7 +770,6 @@
         ctx.fill();
         ctx.restore();
 
-        // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.translate(obj.cx, obj.cy);
@@ -787,7 +784,6 @@
         ctx.fillStyle = body;
         ctx.fillRect(-r, -r, r*2, r*2);
 
-        // swirls
         ctx.save();
         ctx.rotate(obj.rot);
         for (let i=0;i<20;i++){
@@ -816,7 +812,6 @@
         }
         ctx.restore();
 
-        // spark flecks
         for (let i=0;i<22;i++){
           const ang = tSec*0.35 + i*0.62;
           const pr = r * lerp(0.08, 0.70, (Math.sin(i*12.3)+1)/2);
@@ -837,7 +832,6 @@
 
         ctx.restore();
 
-        // core
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const core = ctx.createRadialGradient(obj.cx, obj.cy, r*0.02, obj.cx, obj.cy, r*0.44);
@@ -851,7 +845,6 @@
         ctx.fill();
         ctx.restore();
 
-        // highlight
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const hl = ctx.createRadialGradient(obj.cx - r*0.22, obj.cy - r*0.22, r*0.03, obj.cx - r*0.22, obj.cy - r*0.22, r*0.38);
@@ -978,7 +971,7 @@
         ctx.restore();
       }
 
-      // ---------- Lantern motion (floating in sky; depth aware) ----------
+      // ---------- Lantern motion ----------
       function updateLanterns(dt, tSec){
         const padX = 22;
         const minX = padX;
@@ -986,7 +979,6 @@
         const minY = h*0.08;
         const maxY = h*0.90;
 
-        // global wind feels more like the reference photo (slow, consistent drift)
         const baseWindX = Math.sin(tSec*0.10) * 10 + Math.cos(tSec*0.06) * 6;
         const baseWindY = Math.cos(tSec*0.09) * 3;
 
@@ -994,7 +986,6 @@
           p.wob += p.wobSp * dt;
           p.flick += (1.9 + p.wobSp) * dt;
 
-          // far lanterns move less (parallax)
           const par = lerp(1.0, 0.35, p.z);
 
           const ox = (Math.sin(p.wob + p.id*0.7) * p.drift + Math.cos(p.wob*0.63) * (p.drift*0.55)) * par;
@@ -1020,10 +1011,8 @@
           p.vx *= damp;
           p.vy *= damp;
 
-          // gentle tilt (near lanterns tilt a touch more)
           p.rot = (Math.sin(p.wob*0.7 + p.id) * 0.06) * lerp(1.0, 0.45, p.z);
 
-          // bounds: nudge anchors
           if (p.x < minX){ p.x = minX; p.vx *= -0.20; p.ax += 8; }
           if (p.x > maxX){ p.x = maxX; p.vx *= -0.20; p.ax -= 8; }
           if (p.y < minY){ p.y = minY; p.vy *= -0.20; p.ay += 8; }
@@ -1035,7 +1024,6 @@
           p.glow = Math.max(0, p.glow - dt * 0.90);
         }
 
-        // softer collisions only for near-ish lanterns (keeps far field calm)
         for (let i=0;i<lanterns.length;i++){
           for (let j=i+1;j<lanterns.length;j++){
             const a = lanterns[i], b = lanterns[j];
@@ -1076,20 +1064,16 @@
 
       function drawLantern(p, tSec){
         const rr = p.r;
-
-        // tap behavior: first tap -> vivid mode, next taps cycle vivid palette
         const pal = SKY_LANTERN_COLORS[p.vividIndex % SKY_LANTERN_COLORS.length];
 
         const flick = 0.78 + 0.22*Math.sin(p.flick);
         const glowUp = 0.18 + 0.82*p.glow;
         const glow = clamp(flick * (0.65 + glowUp), 0.25, 1.55);
 
-        // depth affects brightness/blur (far lanterns are dimmer & slightly blurrier)
         const z = p.z;
         const alphaDepth = lerp(1.00, 0.55, z);
         const blurPx = lerp(0.0, 1.4, z);
 
-        // --- Outer halo (photo-like) ---
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.globalAlpha = alphaDepth;
@@ -1103,48 +1087,39 @@
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // --- Lantern body (rectangular sky lantern) ---
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
         ctx.globalAlpha = alphaDepth;
 
-        // silhouette dimensions (taller box, like the reference image)
         const bw = rr * 1.30;
         const bh = rr * 1.85;
 
-        // slight taper near top
         const topW = bw * 0.88;
         const botW = bw * 1.02;
 
-        // body path
         function lanternPath(){
           const rCorner = rr * 0.22;
           const yTop = -bh*0.62;
           const yBot =  bh*0.58;
 
           ctx.beginPath();
-          // top edge
           ctx.moveTo(-topW*0.5 + rCorner, yTop);
           ctx.lineTo( topW*0.5 - rCorner, yTop);
           ctx.quadraticCurveTo( topW*0.5, yTop, topW*0.5, yTop + rCorner);
 
-          // right side
           ctx.lineTo( botW*0.5, yBot - rCorner);
           ctx.quadraticCurveTo( botW*0.5, yBot, botW*0.5 - rCorner, yBot);
 
-          // bottom edge
           ctx.lineTo(-botW*0.5 + rCorner, yBot);
           ctx.quadraticCurveTo(-botW*0.5, yBot, -botW*0.5, yBot - rCorner);
 
-          // left side
           ctx.lineTo(-topW*0.5, yTop + rCorner);
           ctx.quadraticCurveTo(-topW*0.5, yTop, -topW*0.5 + rCorner, yTop);
 
           ctx.closePath();
         }
 
-        // paper gradient (brighter center, colored paper glow)
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.filter = blurPx ? `blur(${blurPx}px)` : 'none';
@@ -1161,7 +1136,6 @@
         ctx.fill();
         ctx.restore();
 
-        // subtle edge/rim definition (photo-ish)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.globalAlpha = 0.12 + 0.10*glowUp;
@@ -1172,7 +1146,6 @@
         ctx.stroke();
         ctx.restore();
 
-        // vertical ribs (very subtle)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.globalAlpha = (0.05 + 0.08*glowUp) * alphaDepth;
@@ -1180,7 +1153,7 @@
         ctx.lineWidth = 1;
         const ribCount = 4;
         for (let k=0;k<ribCount;k++){
-          const t = (k/(ribCount-1)) * 2 - 1; // -1..1
+          const t = (k/(ribCount-1)) * 2 - 1;
           const x = t * bw * 0.28;
           ctx.beginPath();
           ctx.moveTo(x*0.85, -bh*0.52);
@@ -1189,7 +1162,6 @@
         }
         ctx.restore();
 
-        // bottom opening glow (the “bright base” you see in the photo)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.filter = blurPx ? `blur(${blurPx*0.7}px)` : 'none';
@@ -1204,7 +1176,6 @@
         ctx.fill();
         ctx.restore();
 
-        // inner flame (small, bright, near bottom)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.globalAlpha = alphaDepth;
@@ -1223,7 +1194,6 @@
         ctx.fill();
         ctx.restore();
 
-        // top cap (thin) + tiny hook hint
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         ctx.globalAlpha = (0.18 + 0.12*glowUp) * alphaDepth;
@@ -1462,23 +1432,20 @@
           if (li !== -1){
             const p = lanterns[li];
 
-            // toggle vivid + cycle colour
             if (p.mode !== 'vivid'){
               p.mode = 'vivid';
             } else {
               p.vividIndex = (p.vividIndex + 1) % SKY_LANTERN_COLORS.length;
             }
 
-            // glow up + tiny bump so it feels responsive
             p.glow = 1;
             const kick = lerp(34, 18, p.z);
             p.vx += rand(-kick, kick);
             p.vy += rand(-kick*0.85, kick*0.85);
 
-            // holiday message
-            const idx = holidayOrder[holidayPtr % holidayOrder.length];
+            const idx = holidayOrder.length ? holidayOrder[holidayPtr % holidayOrder.length] : 0;
             holidayPtr++;
-            showOneShot(HOLIDAY_MESSAGES[idx], 6800);
+            showOneShot(HOLIDAY_MESSAGES[idx] || "", 6800);
           }
           return;
         }
@@ -1486,7 +1453,7 @@
         if (scene === 'planet'){
           if (inHitCircle(x,y,moon.x,moon.y,moon.rBase*1.6)){
             moon.glow = 1;
-            const fact = MOON_FACTS[moonFactIndex % MOON_FACTS.length];
+            const fact = MOON_FACTS[moonFactIndex % MOON_FACTS.length] || "";
             moonFactIndex++;
             showOneShot(fact, 5600);
             return;
@@ -1606,7 +1573,6 @@
         updatePalette(nowMs);
         drawBackground(tSec);
 
-        // rotations
         star.rot  += dt * 0.18;  star.rot2 += dt * 0.11;
         booPlanet.rot  += dt * 0.16; booPlanet.rot2 += dt * 0.10;
 
@@ -1629,7 +1595,6 @@
             bloomScale: 2.4,
             warpScale: 5.0,
             onWarpComplete: () => {
-              // entering lantern scene: no Boo Planet rendered here anymore
               initLanterns(true);
               goToScene('lantern');
             }
@@ -1642,10 +1607,7 @@
         }
 
         if (scene === 'lantern'){
-          // ✅ Boo Planet removed: only lantern sky
           updateLanterns(dt, tSec);
-
-          // depth sort: far first, near last (so big ones sit on top like the photo)
           lanterns.sort((a,b)=> b.z - a.z);
           for (const p of lanterns) drawLantern(p, tSec);
         }
