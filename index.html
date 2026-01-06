@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Boo Planet (v1.3)</title>
+  <title>Boo Planet (v1.4) — Planet Boo Biomes</title>
 
   <!-- Retro arcade font (online). If you want offline, download and self-host. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -218,6 +218,35 @@
       color: rgba(244,248,255,0.96);
     }
 
+    /* Tiny top-left helper buttons (parent-facing but still pretty) */
+    .miniUI{
+      position:fixed;
+      left: 12px;
+      top: 12px;
+      padding-top: env(safe-area-inset-top);
+      display:flex;
+      gap:10px;
+      z-index: 70;
+      pointer-events:auto;
+      user-select:none;
+    }
+    .miniBtn{
+      font-family: "Press Start 2P", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10px;
+      letter-spacing: .6px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+      color: rgba(244,248,255,0.90);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 14px 34px rgba(0,0,0,.30);
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .miniBtn:active{ transform: translateY(1px) scale(0.99); }
+
     /* ✅ Copyright (small, unobtrusive, appears on all screens) */
     .copyrightMark{
       position:fixed;
@@ -258,6 +287,12 @@
     </div>
   </div>
 
+  <!-- Small UI controls -->
+  <div class="miniUI" aria-hidden="false">
+    <button class="miniBtn" id="visitBtn" type="button" title="Visit Planet Boo">VISIT</button>
+    <button class="miniBtn" id="homeBtn" type="button" title="Back to space">HOME</button>
+  </div>
+
   <div class="ui">
     <!-- WELCOME -->
     <div class="panel screen active" id="welcome">
@@ -266,9 +301,8 @@
 
         <div class="copy">
           <p><strong style="color:rgba(244,248,255,0.95);">This is a sensory cause-and-effect playground.</strong></p>
-          <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs. 
-            <p>Press the star to see it glow, push and pull the sattelites to change their trajectory... And visit Planet Boo...
-              <p>Boo Planet can help young children to develop:</p>
+          <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs.</p>
+          <p>Press the star to see it glow, push and pull the satellites to change their trajectory… Boo Planet can help young children to develop:</p>
           <ul>
             <li><strong>Cause &amp; effect understanding</strong></li>
             <li><strong>Motor control</strong></li>
@@ -287,8 +321,6 @@
   </div>
 
   <div class="pressToPlay" id="pressToPlay">Press to Play</div>
-
-  <!-- ✅ Copyright mark (visible across welcome + play) -->
   <div class="copyrightMark">© 2026 Boo Industries. All rights reserved.</div>
 
   <script>
@@ -301,6 +333,7 @@
 
       const easeInOutCubic = t => (t < 0.5) ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+      const easeInOutSine = t => -(Math.cos(Math.PI * t) - 1) / 2;
 
       // ---------- DOM ----------
       const canvas = document.getElementById('stage');
@@ -311,6 +344,9 @@
       const play = document.getElementById('play');
       const startBtn = document.getElementById('startBtn');
       const pressToPlay = document.getElementById('pressToPlay');
+
+      const visitBtn = document.getElementById('visitBtn');
+      const homeBtn = document.getElementById('homeBtn');
 
       const messageCard = document.getElementById('messageCard');
       const messageText = document.getElementById('messageText');
@@ -366,332 +402,7 @@
         }
       }
 
-      // ---------- Palettes ----------
-      const PALETTES = [
-        { core:{r:200,g:250,b:255}, plasma:{r:143,g:243,b:255}, corona:{r:168,g:160,b:255}, spark:{r:255,g:255,b:255} },
-        { core:{r:255,g:240,b:210}, plasma:{r:255,g:210,b:120}, corona:{r:255,g:170,b:90},  spark:{r:255,g:255,b:255} },
-        { core:{r:210,g:255,b:240}, plasma:{r:140,g:255,b:220}, corona:{r:120,g:200,b:255}, spark:{r:255,g:255,b:255} },
-        { core:{r:255,g:220,b:235}, plasma:{r:255,g:170,b:210}, corona:{r:200,g:170,b:255}, spark:{r:255,g:255,b:255} },
-        { core:{r:200,g:230,b:255}, plasma:{r:80,g:220,b:255},  corona:{r:120,g:150,b:255}, spark:{r:255,g:255,b:255} },
-      ];
-
-      let palette = structuredClone(PALETTES[0]);
-      let paletteFrom = structuredClone(palette);
-      let paletteTo = structuredClone(palette);
-      let paletteTweenT0 = 0;
-      let paletteTweenDur = 850;
-
-      function pickNewPalette(nowMs){
-        const next = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-        paletteFrom = structuredClone(palette);
-        paletteTo = structuredClone(next);
-        paletteTweenT0 = nowMs;
-      }
-      function updatePalette(nowMs){
-        const t = clamp((nowMs - paletteTweenT0) / paletteTweenDur, 0, 1);
-        const tt = easeOutCubic(t);
-        palette = {
-          core:  lerpColor(paletteFrom.core,  paletteTo.core,  tt),
-          plasma:lerpColor(paletteFrom.plasma,paletteTo.plasma,tt),
-          corona:lerpColor(paletteFrom.corona,paletteTo.corona,tt),
-          spark: lerpColor(paletteFrom.spark, paletteTo.spark, tt)
-        };
-      }
-
-      // ---------- Main Star ----------
-      const star = {
-        cx:0, cy:0, rBase:0,
-        rot:0, rot2:0,
-        scale:1,
-        state:'idle',
-        t0:0,
-        bloomUpMs: 8000,
-        returnMs: 2400,
-        intensity: 1
-      };
-
-      function computeLayout(){
-        star.cx = w * 0.5;
-        star.cy = h * 0.42;
-        const minDim = Math.min(w, h);
-        star.rBase = clamp(minDim * 0.165, 96, 190);
-      }
-      computeLayout();
-      window.addEventListener('resize', computeLayout, { passive:true });
-
-      // ---------- Satellites (draggable orbiters) ----------
-      const satellites = [];
-      const SAT_COUNT = 5;
-
-      function initSatellites(){
-        satellites.length = 0;
-        for(let i=0;i<SAT_COUNT;i++){
-          const baseR = star.rBase * rand(1.20, 1.95);
-          const ang = Math.random() * Math.PI * 2;
-          satellites.push({
-            id: i,
-            orbitRadius: baseR,
-            angle: ang,
-            omega: rand(0.10, 0.24) * (Math.random() < 0.5 ? 1 : -1),
-            x: star.cx + Math.cos(ang)*baseR,
-            y: star.cy + Math.sin(ang)*baseR,
-            rBase: clamp(star.rBase * rand(0.12, 0.18), 16, 34),
-            scale: 1,
-            state: 'idle',
-            t0: 0,
-            swellUpMs: 900,
-            returnMs: 650,
-            tint: Math.random() < 0.5 ? 'cool' : 'warm',
-            dragging: false
-          });
-        }
-      }
-      initSatellites();
-      window.addEventListener('resize', initSatellites, { passive:true });
-
-      // ---------- Calm universe messages (7.5s total per trigger) ----------
-      // Only start if no message is currently playing.
-      const UNIVERSE_MESSAGES = [
-        // Message 1 is a 2-part sequence (each part fades in/out)
-        {
-          parts: [
-            "Our universe is old…",
-            "The galaxy where we live, the Milky Way, is an estimated 13.6 billion years old!"
-          ]
-        },
-        { text: "Space is so big… even light, the fastest thing we know, takes time to travel." },
-        { text: "Stars are very far away… the sunlight we feel is about 8 minutes old when it reaches us." },
-        { text: "The Milky Way is huge… it holds hundreds of billions of stars, like a sparkling ocean." },
-        { text: "We live on a celestial planet… Earth orbits our own star: The Sun." },
-        { text: "Some stars are giants… many could fit our Sun inside them again and again." },
-        { text: "Some stars are newborns… forming slowly inside soft clouds of cosmic dust." },
-        { text: "There are many galaxies… and each one is its own great swirl of stars." },
-        { text: "Space has quiet travelers… comets and asteroids drift for a long time, far from home." },
-        { text: "Gravity is a gentle pull… it helps planets stay in their paths around stars." },
-        { text: "We are made of star-stuff… the atoms in our bodies were once part of ancient stars." }
-      ];
-
-      let messageIndex = 0;
-      let messagePlaying = false;
-      let messageTimers = [];
-
-      function clearMessageTimers(){
-        for (const id of messageTimers) clearTimeout(id);
-        messageTimers = [];
-      }
-
-      function setMessageVisible(isVisible){
-        if (isVisible) messageCard.classList.add('isVisible');
-        else messageCard.classList.remove('isVisible');
-      }
-
-      function showMessage(text){
-        messageText.textContent = text;
-        // next frame helps Safari apply transitions reliably
-        requestAnimationFrame(() => setMessageVisible(true));
-      }
-
-      function hideMessage(){
-        setMessageVisible(false);
-      }
-
-      // Plays one "part" inside a given time window with fade in/out
-      function playPart(text, partMs, fadeMs){
-        const holdMs = Math.max(0, partMs - (fadeMs * 2));
-
-        showMessage(text);
-
-        // hide after (fade in + hold)
-        messageTimers.push(setTimeout(() => {
-          hideMessage();
-        }, fadeMs + holdMs));
-
-        // ensure fully hidden by end of part
-        messageTimers.push(setTimeout(() => {
-          // keep hidden, no-op but ensures state
-          hideMessage();
-        }, partMs));
-      }
-
-      function playUniverseMessage(){
-        if (!allowInput) return;
-        if (messagePlaying) return;
-
-        messagePlaying = true;
-        clearMessageTimers();
-
-        const msg = UNIVERSE_MESSAGES[messageIndex % UNIVERSE_MESSAGES.length];
-        messageIndex++;
-
-        const totalMs = 7500;
-
-        // If 2-part message: split total evenly (each part has its own fade in/out)
-        if (msg.parts && Array.isArray(msg.parts) && msg.parts.length > 1){
-          const parts = msg.parts.slice(0, 2);
-          const partMs = Math.floor(totalMs / parts.length); // 3750ms each
-          const fadeMs = 450; // gentle but readable
-
-          // Part 1
-          playPart(parts[0], partMs, fadeMs);
-
-          // Part 2 starts after part 1 completes
-          messageTimers.push(setTimeout(() => {
-            playPart(parts[1], partMs, fadeMs);
-          }, partMs));
-
-          // End
-          messageTimers.push(setTimeout(() => {
-            hideMessage();
-            messagePlaying = false;
-          }, partMs * parts.length + 20));
-
-          return;
-        }
-
-        // Single-part message: fade in / hold / fade out across 7.5s
-        const fadeMs = 600;
-        const holdMs = totalMs - (fadeMs * 2);
-
-        showMessage(msg.text || "");
-
-        messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
-        messageTimers.push(setTimeout(() => {
-          hideMessage();
-          messagePlaying = false;
-        }, totalMs + 20));
-      }
-
-      // ---------- Interaction ----------
-      let allowInput = false;
-      let lastMs = performance.now();
-      let tapThrottleT = 0;
-
-      function startMainBloom(nowMs){
-        if (!allowInput) return;
-
-        if (star.state === 'idle') {
-          pickNewPalette(nowMs);
-          star.state = 'bloomUp';
-          star.t0 = nowMs;
-          return;
-        }
-
-        if (nowMs - tapThrottleT > 500) {
-          tapThrottleT = nowMs;
-          pickNewPalette(nowMs);
-        }
-      }
-
-      function updateMainBloom(nowMs){
-        if (star.state === 'idle'){
-          const t = nowMs * 0.001;
-          star.scale = 1 + 0.020 * Math.sin(t * 2 * Math.PI / 6.2);
-          star.intensity = 1.0 + 0.06 * (0.5 + 0.5*Math.sin(t * 2*Math.PI / 7.2));
-          return;
-        }
-
-        if (star.state === 'bloomUp'){
-          const t = clamp((nowMs - star.t0) / star.bloomUpMs, 0, 1);
-          const e = easeInOutCubic(t);
-          star.scale = lerp(1.0, 3.0, e);
-
-          // added verve: immediate acknowledgement + passionate swell
-          const quick = easeOutCubic(clamp(t / 0.10, 0, 1));
-          const long = easeInOutCubic(clamp((t - 0.05) / 0.95, 0, 1));
-          star.intensity = 1.05 + 0.30 * quick + 0.90 * long;
-
-          if (t >= 1){
-            star.state = 'return';
-            star.t0 = nowMs;
-          }
-          return;
-        }
-
-        if (star.state === 'return'){
-          const t = clamp((nowMs - star.t0) / star.returnMs, 0, 1);
-          const e = easeOutCubic(t);
-          star.scale = lerp(3.0, 1.0, e);
-
-          // corona lingers
-          const linger = 1 - 0.35 * e;
-          star.intensity = (1.25 * linger) + 0.05;
-
-          if (t >= 1){
-            star.state = 'idle';
-            star.t0 = nowMs;
-          }
-        }
-      }
-
-      function startSatelliteSwell(s, nowMs){
-        s.state = 'swellUp';
-        s.t0 = nowMs;
-      }
-
-      function updateSatelliteSwell(s, nowMs){
-        if (s.state === 'idle'){
-          const t = nowMs * 0.001;
-          s.scale = 1 + 0.010 * Math.sin(t * 2*Math.PI / (5.2 + s.id*0.6));
-          return;
-        }
-        if (s.state === 'swellUp'){
-          const t = clamp((nowMs - s.t0) / s.swellUpMs, 0, 1);
-          s.scale = lerp(1.0, 1.85, easeOutCubic(t));
-          if (t >= 1){
-            s.state = 'return';
-            s.t0 = nowMs;
-          }
-          return;
-        }
-        if (s.state === 'return'){
-          const t = clamp((nowMs - s.t0) / s.returnMs, 0, 1);
-          s.scale = lerp(1.85, 1.0, easeOutCubic(t));
-          if (t >= 1){
-            s.state = 'idle';
-          }
-        }
-      }
-
-      // ---------- Orbit + Drag ----------
-      function updateSatellitePositions(dt){
-        for (const s of satellites){
-          if (s.dragging) continue;
-          s.angle += s.omega * dt;
-          s.x = star.cx + Math.cos(s.angle) * s.orbitRadius;
-          s.y = star.cy + Math.sin(s.angle) * s.orbitRadius;
-        }
-      }
-
-      function setSatelliteOrbitFromPosition(s){
-        const dx = s.x - star.cx;
-        const dy = s.y - star.cy;
-        const r = Math.sqrt(dx*dx + dy*dy);
-        s.orbitRadius = clamp(r, star.rBase * 0.85, Math.min(w,h) * 0.48);
-        s.angle = Math.atan2(dy, dx);
-      }
-
-      function hitSatellite(x,y){
-        for (let i = satellites.length - 1; i >= 0; i--){
-          const s = satellites[i];
-          const rr = s.rBase * 1.75;
-          const dx = x - s.x;
-          const dy = y - s.y;
-          if (dx*dx + dy*dy <= rr*rr) return i;
-        }
-        return -1;
-      }
-
-      function inMainStarHit(x,y){
-        const r = star.rBase * 1.22;
-        const dx = x - star.cx;
-        const dy = y - star.cy;
-        return (dx*dx + dy*dy) <= (r*r);
-      }
-
-      const drag = { active:false, satIndex:-1, pointerId:null };
-
-      // ---------- Drawing ----------
-      function drawBackground(tSec){
+      function drawSpaceBackground(tSec){
         const g = ctx.createLinearGradient(0,0,0,h);
         g.addColorStop(0, '#020617');
         g.addColorStop(0.6, '#06102a');
@@ -727,6 +438,416 @@
         ctx.restore();
       }
 
+      // ---------- Message overlay (reuse) ----------
+      let messageIndex = 0;
+      let messagePlaying = false;
+      let messageTimers = [];
+
+      function clearMessageTimers(){
+        for (const id of messageTimers) clearTimeout(id);
+        messageTimers = [];
+      }
+      function setMessageVisible(isVisible){
+        if (isVisible) messageCard.classList.add('isVisible');
+        else messageCard.classList.remove('isVisible');
+      }
+      function showMessage(text){
+        messageText.textContent = text;
+        requestAnimationFrame(() => setMessageVisible(true));
+      }
+      function hideMessage(){ setMessageVisible(false); }
+
+      // planet/biome messages (calm + tiny)
+      const PLANET_MESSAGES = {
+        sky: [
+          { name:"Lantern Moth Boo", text:"Lantern Moth Boo\n\nIt glows softly to find friends in the clouds." },
+          { name:"Cloud Kitty Boo",  text:"Cloud Kitty Boo\n\nIt drifts slowly and puffs up when you say hello." },
+          { name:"Sky Sprout Boo",   text:"Sky Sprout Boo\n\nIt rides warm air like a gentle leaf in space." }
+        ],
+        land: [
+          { name:"Pebble Crab Boo",  text:"Pebble Crab Boo\n\nIt shuffles sideways and hides when it feels shy." },
+          { name:"Star Sprout Boo",  text:"Star Sprout Boo\n\nIt grows a little, then rests again." },
+          { name:"Moss Pup Boo",     text:"Moss Pup Boo\n\nIt makes small hops and likes soft taps." }
+        ],
+        sea: [
+          { name:"Bloop Boo",        text:"Bloop Boo\n\nA bubble friend—tap to help it bloom and settle." },
+          { name:"Ribbon Fish Boo",  text:"Ribbon Fish Boo\n\nIt glides like a ribbon and follows your taps." },
+          { name:"Shell Snail Boo",  text:"Shell Snail Boo\n\nIt peeks out, then tucks back into calm." }
+        ]
+      };
+
+      function playOneLineMessage(text, totalMs=5200){
+        if (messagePlaying) return;
+        messagePlaying = true;
+        clearMessageTimers();
+
+        const fadeMs = 520;
+        const holdMs = Math.max(0, totalMs - fadeMs*2);
+
+        showMessage(text);
+        messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
+        messageTimers.push(setTimeout(() => {
+          hideMessage();
+          messagePlaying = false;
+        }, totalMs + 20));
+      }
+
+      // ---------- Palettes (for star) ----------
+      const PALETTES = [
+        { core:{r:200,g:250,b:255}, plasma:{r:143,g:243,b:255}, corona:{r:168,g:160,b:255}, spark:{r:255,g:255,b:255} },
+        { core:{r:255,g:240,b:210}, plasma:{r:255,g:210,b:120}, corona:{r:255,g:170,b:90},  spark:{r:255,g:255,b:255} },
+        { core:{r:210,g:255,b:240}, plasma:{r:140,g:255,b:220}, corona:{r:120,g:200,b:255}, spark:{r:255,g:255,b:255} },
+        { core:{r:255,g:220,b:235}, plasma:{r:255,g:170,b:210}, corona:{r:200,g:170,b:255}, spark:{r:255,g:255,b:255} },
+        { core:{r:200,g:230,b:255}, plasma:{r:80,g:220,b:255},  corona:{r:120,g:150,b:255}, spark:{r:255,g:255,b:255} },
+      ];
+
+      let palette = structuredClone(PALETTES[0]);
+      let paletteFrom = structuredClone(palette);
+      let paletteTo = structuredClone(palette);
+      let paletteTweenT0 = 0;
+      let paletteTweenDur = 850;
+
+      function pickNewPalette(nowMs){
+        const next = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+        paletteFrom = structuredClone(palette);
+        paletteTo = structuredClone(next);
+        paletteTweenT0 = nowMs;
+      }
+      function updatePalette(nowMs){
+        const t = clamp((nowMs - paletteTweenT0) / paletteTweenDur, 0, 1);
+        const tt = easeOutCubic(t);
+        palette = {
+          core:  lerpColor(paletteFrom.core,  paletteTo.core,  tt),
+          plasma:lerpColor(paletteFrom.plasma,paletteTo.plasma,tt),
+          corona:lerpColor(paletteFrom.corona,paletteTo.corona,tt),
+          spark: lerpColor(paletteFrom.spark, paletteTo.spark, tt)
+        };
+      }
+
+      // ---------- Scene + Camera ----------
+      const scene = {
+        current: 'space',   // 'space' | 'planet' | 'biome'
+        biome: null,        // 'sky' | 'land' | 'sea'
+        transition: null    // {from,to,t0,dur, kind}
+      };
+
+      const cam = {
+        x: 0, y: 0, z: 1,         // current
+        tx: 0, ty: 0, tz: 1,      // target
+      };
+
+      function setCameraTarget(x,y,z){
+        cam.tx = x; cam.ty = y; cam.tz = z;
+      }
+
+      function applyCamera(){
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        ctx.translate(w*0.5, h*0.5);
+        ctx.scale(cam.z, cam.z);
+        ctx.translate(-w*0.5 + cam.x, -h*0.5 + cam.y);
+      }
+
+      function updateCamera(dt){
+        // smooth follow
+        const k = 1 - Math.pow(0.001, dt); // time-based smoothing
+        cam.x = lerp(cam.x, cam.tx, k);
+        cam.y = lerp(cam.y, cam.ty, k);
+        cam.z = lerp(cam.z, cam.tz, k);
+      }
+
+      function beginTransition(toScene, opts={}){
+        const now = performance.now();
+        scene.transition = {
+          from: scene.current,
+          to: toScene,
+          t0: now,
+          dur: opts.dur ?? 1400,
+          kind: opts.kind ?? 'zoom',
+          biome: opts.biome ?? null
+        };
+      }
+
+      // ---------- Space Star (existing) ----------
+      const star = {
+        cx:0, cy:0, rBase:0,
+        rot:0, rot2:0,
+        scale:1,
+        state:'idle',
+        t0:0,
+        bloomUpMs: 8000,
+        returnMs: 2400,
+        intensity: 1
+      };
+
+      function computeLayout(){
+        star.cx = w * 0.5;
+        star.cy = h * 0.42;
+        const minDim = Math.min(w, h);
+        star.rBase = clamp(minDim * 0.165, 96, 190);
+      }
+      computeLayout();
+      window.addEventListener('resize', computeLayout, { passive:true });
+
+      // ---------- Satellites (space only) ----------
+      const satellites = [];
+      const SAT_COUNT = 5;
+
+      function initSatellites(){
+        satellites.length = 0;
+        for(let i=0;i<SAT_COUNT;i++){
+          const baseR = star.rBase * rand(1.20, 1.95);
+          const ang = Math.random() * Math.PI * 2;
+          satellites.push({
+            id: i,
+            orbitRadius: baseR,
+            angle: ang,
+            omega: rand(0.10, 0.24) * (Math.random() < 0.5 ? 1 : -1),
+            x: star.cx + Math.cos(ang)*baseR,
+            y: star.cy + Math.sin(ang)*baseR,
+            rBase: clamp(star.rBase * rand(0.12, 0.18), 16, 34),
+            scale: 1,
+            state: 'idle',
+            t0: 0,
+            swellUpMs: 900,
+            returnMs: 650,
+            tint: Math.random() < 0.5 ? 'cool' : 'warm',
+            dragging: false
+          });
+        }
+      }
+      initSatellites();
+      window.addEventListener('resize', initSatellites, { passive:true });
+
+      // ---------- Planet Boo (hub orb with 3 layers) ----------
+      const planet = {
+        cx: 0, cy: 0, r: 0,
+        rot: 0,
+        atmospherePulse: 0
+      };
+      function computePlanetLayout(){
+        planet.cx = w * 0.5;
+        planet.cy = h * 0.48;
+        planet.r  = clamp(Math.min(w,h) * 0.26, 140, 250);
+      }
+      computePlanetLayout();
+      window.addEventListener('resize', computePlanetLayout, { passive:true });
+
+      // ---------- Biome actors ----------
+      const biome = {
+        actors: [],
+        clouds: [],
+        bubbles: [],
+        decor: [],
+        lastBiome: null
+      };
+
+      function resetBiome(which){
+        biome.actors = [];
+        biome.clouds = [];
+        biome.bubbles = [];
+        biome.decor = [];
+        biome.lastBiome = which;
+
+        const count = 6; // gentle number
+
+        if (which === 'sky'){
+          // clouds
+          for (let i=0;i<8;i++){
+            biome.clouds.push({
+              x: rand(w*0.08, w*0.92),
+              y: rand(h*0.18, h*0.62),
+              r: rand(26, 70),
+              vx: rand(6, 18) * (Math.random()<0.5?-1:1),
+              a: rand(0.06, 0.14)
+            });
+          }
+          // flying creatures
+          const labels = PLANET_MESSAGES.sky;
+          for (let i=0;i<count;i++){
+            const label = labels[i % labels.length];
+            biome.actors.push(makeActor('sky', label, i));
+          }
+        }
+
+        if (which === 'land'){
+          // plants / stones
+          for (let i=0;i<10;i++){
+            biome.decor.push({
+              x: rand(w*0.10, w*0.90),
+              y: rand(h*0.55, h*0.90),
+              h: rand(14, 44),
+              sway: rand(0.6, 1.3),
+              kind: Math.random()<0.6?'sprout':'pebble'
+            });
+          }
+          const labels = PLANET_MESSAGES.land;
+          for (let i=0;i<count;i++){
+            const label = labels[i % labels.length];
+            biome.actors.push(makeActor('land', label, i));
+          }
+        }
+
+        if (which === 'sea'){
+          // bubbles
+          for (let i=0;i<14;i++){
+            biome.bubbles.push({
+              x: rand(w*0.10, w*0.90),
+              y: rand(h*0.25, h*0.95),
+              r: rand(4, 14),
+              vy: rand(12, 32),
+              a: rand(0.05, 0.14)
+            });
+          }
+          const labels = PLANET_MESSAGES.sea;
+          for (let i=0;i<count;i++){
+            const label = labels[i % labels.length];
+            biome.actors.push(makeActor('sea', label, i));
+          }
+        }
+      }
+
+      function makeActor(which, label, i){
+        const base = {
+          biome: which,
+          name: label.name,
+          info: label.text,
+          x: rand(w*0.18, w*0.82),
+          y: rand(h*0.22, h*0.78),
+          r: rand(18, 34),
+          scale: 1,
+          state: 'idle',
+          t0: 0,
+          // motion
+          vx: rand(-18, 18),
+          vy: rand(-12, 12),
+          tx: null,
+          ty: null,
+          // palette
+          hue: rand(180, 290) + i*7,
+        };
+        if (which === 'land'){
+          base.y = rand(h*0.58, h*0.86);
+          base.vx *= 0.55;
+          base.vy *= 0.25;
+        }
+        if (which === 'sea'){
+          base.y = rand(h*0.40, h*0.88);
+          base.vx *= 0.65;
+          base.vy *= 0.65;
+        }
+        if (which === 'sky'){
+          base.y = rand(h*0.20, h*0.64);
+          base.vx *= 0.95;
+          base.vy *= 0.85;
+        }
+        return base;
+      }
+
+      // ---------- Space interactions (star + satellites) ----------
+      let allowInput = false;
+      let lastMs = performance.now();
+      let tapThrottleT = 0;
+
+      function startMainBloom(nowMs){
+        if (!allowInput) return;
+        if (star.state === 'idle') {
+          pickNewPalette(nowMs);
+          star.state = 'bloomUp';
+          star.t0 = nowMs;
+          return;
+        }
+        if (nowMs - tapThrottleT > 500) {
+          tapThrottleT = nowMs;
+          pickNewPalette(nowMs);
+        }
+      }
+
+      function updateMainBloom(nowMs){
+        if (star.state === 'idle'){
+          const t = nowMs * 0.001;
+          star.scale = 1 + 0.020 * Math.sin(t * 2 * Math.PI / 6.2);
+          star.intensity = 1.0 + 0.06 * (0.5 + 0.5*Math.sin(t * 2*Math.PI / 7.2));
+          return;
+        }
+
+        if (star.state === 'bloomUp'){
+          const t = clamp((nowMs - star.t0) / star.bloomUpMs, 0, 1);
+          const e = easeInOutCubic(t);
+          star.scale = lerp(1.0, 3.0, e);
+
+          // verve: immediate acknowledgement + swell
+          const quick = easeOutCubic(clamp(t / 0.10, 0, 1));
+          const long = easeInOutCubic(clamp((t - 0.05) / 0.95, 0, 1));
+          star.intensity = 1.05 + 0.30 * quick + 0.90 * long;
+
+          if (t >= 1){
+            star.state = 'return';
+            star.t0 = nowMs;
+          }
+          return;
+        }
+
+        if (star.state === 'return'){
+          const t = clamp((nowMs - star.t0) / star.returnMs, 0, 1);
+          const e = easeOutCubic(t);
+          star.scale = lerp(3.0, 1.0, e);
+
+          const linger = 1 - 0.35 * e;
+          star.intensity = (1.25 * linger) + 0.05;
+
+          if (t >= 1){
+            star.state = 'idle';
+            star.t0 = nowMs;
+          }
+        }
+      }
+
+      function startSatelliteSwell(s, nowMs){
+        s.state = 'swellUp';
+        s.t0 = nowMs;
+      }
+      function updateSatelliteSwell(s, nowMs){
+        if (s.state === 'idle'){
+          const t = nowMs * 0.001;
+          s.scale = 1 + 0.010 * Math.sin(t * 2*Math.PI / (5.2 + s.id*0.6));
+          return;
+        }
+        if (s.state === 'swellUp'){
+          const t = clamp((nowMs - s.t0) / s.swellUpMs, 0, 1);
+          s.scale = lerp(1.0, 1.85, easeOutCubic(t));
+          if (t >= 1){
+            s.state = 'return';
+            s.t0 = nowMs;
+          }
+          return;
+        }
+        if (s.state === 'return'){
+          const t = clamp((nowMs - s.t0) / s.returnMs, 0, 1);
+          s.scale = lerp(1.85, 1.0, easeOutCubic(t));
+          if (t >= 1){
+            s.state = 'idle';
+          }
+        }
+      }
+
+      // orbit + drag (space)
+      function updateSatellitePositions(dt){
+        for (const s of satellites){
+          if (s.dragging) continue;
+          s.angle += s.omega * dt;
+          s.x = star.cx + Math.cos(s.angle) * s.orbitRadius;
+          s.y = star.cy + Math.sin(s.angle) * s.orbitRadius;
+        }
+      }
+      function setSatelliteOrbitFromPosition(s){
+        const dx = s.x - star.cx;
+        const dy = s.y - star.cy;
+        const r = Math.sqrt(dx*dx + dy*dy);
+        s.orbitRadius = clamp(r, star.rBase * 0.85, Math.min(w,h) * 0.48);
+        s.angle = Math.atan2(dy, dx);
+      }
+
+      // ---------- Drawing: Space star + satellites ----------
       function beginShimmerClip(r, tSec){
         const steps = 84;
         ctx.beginPath();
@@ -790,7 +911,6 @@
           crownAlpha = easeOutCubic(clamp((tt - 0.78) / 0.22, 0, 1));
         }
 
-        // spill
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const spill = ctx.createRadialGradient(star.cx, star.cy, r*0.25, star.cx, star.cy, r*2.65);
@@ -803,7 +923,6 @@
 
         drawFlares(r, tSec, intensity);
 
-        // corona
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const corona = ctx.createRadialGradient(star.cx, star.cy, r*0.62, star.cx, star.cy, r*1.16);
@@ -816,7 +935,6 @@
         ctx.fill();
         ctx.restore();
 
-        // golden crown halo
         if (crownAlpha > 0){
           ctx.save();
           ctx.globalCompositeOperation = 'screen';
@@ -833,7 +951,6 @@
           ctx.restore();
         }
 
-        // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.translate(star.cx, star.cy);
@@ -937,7 +1054,6 @@
         const coreC = (s.tint === 'cool') ? coolCore : warmCore;
         const glowC = (s.tint === 'cool') ? coolGlow : warmGlow;
 
-        // halo
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const halo = ctx.createRadialGradient(s.x, s.y, rr*0.25, s.x, s.y, rr*2.2);
@@ -948,7 +1064,6 @@
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const body = ctx.createRadialGradient(s.x, s.y, rr*0.03, s.x, s.y, rr*1.0);
@@ -962,7 +1077,6 @@
         ctx.fill();
         ctx.restore();
 
-        // highlight
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const hl = ctx.createRadialGradient(s.x - rr*0.25, s.y - rr*0.25, rr*0.02, s.x - rr*0.25, s.y - rr*0.25, rr*0.48);
@@ -977,6 +1091,462 @@
         ctx.restore();
       }
 
+      // ---------- Planet Boo drawing + hit test ----------
+      function drawPlanetBoo(tSec){
+        planet.rot += 0.010;
+
+        // planet shadowing
+        const r = planet.r;
+        const cx = planet.cx, cy = planet.cy;
+
+        // atmosphere
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const ap = 0.55 + 0.45*Math.sin(tSec*0.55);
+        planet.atmospherePulse = ap;
+
+        const atm = ctx.createRadialGradient(cx, cy, r*0.90, cx, cy, r*1.18);
+        atm.addColorStop(0.0, 'rgba(120,200,255,0)');
+        atm.addColorStop(0.35, `rgba(140,230,255,${0.10*ap})`);
+        atm.addColorStop(0.62, `rgba(180,170,255,${0.08*ap})`);
+        atm.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = atm;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r*1.22, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // body base
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const base = ctx.createRadialGradient(cx - r*0.25, cy - r*0.25, r*0.10, cx, cy, r*1.05);
+        base.addColorStop(0.0, 'rgba(255,255,255,0.16)');
+        base.addColorStop(0.25, 'rgba(170,200,255,0.10)');
+        base.addColorStop(0.65, 'rgba(120,130,255,0.06)');
+        base.addColorStop(1.0, 'rgba(0,0,0,0.00)');
+        ctx.fillStyle = base;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // Clip planet for layers
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.clip();
+
+        // subtle rotation bands
+        const bandShift = Math.sin(tSec*0.18) * r*0.03;
+
+        // SKY layer (top)
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(planet.rot * 0.20);
+        const skyG = ctx.createLinearGradient(0, -r, 0, -r*0.05);
+        skyG.addColorStop(0.0, 'rgba(190,220,255,0.22)');
+        skyG.addColorStop(0.6, 'rgba(120,200,255,0.10)');
+        skyG.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = skyG;
+        ctx.fillRect(-r, -r, r*2, r*0.85);
+        ctx.restore();
+
+        // LAND band (middle)
+        ctx.save();
+        ctx.translate(cx, cy + bandShift);
+        ctx.rotate(-planet.rot * 0.14);
+        const landG = ctx.createLinearGradient(-r, 0, r, 0);
+        landG.addColorStop(0.0, 'rgba(190,170,255,0.08)');
+        landG.addColorStop(0.35,'rgba(140,255,220,0.10)');
+        landG.addColorStop(0.65,'rgba(140,210,255,0.08)');
+        landG.addColorStop(1.0, 'rgba(0,0,0,0.00)');
+        ctx.fillStyle = landG;
+        ctx.fillRect(-r, -r*0.18, r*2, r*0.42);
+        ctx.restore();
+
+        // SEA layer (bottom)
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(planet.rot * 0.12);
+        const seaG = ctx.createLinearGradient(0, r*0.05, 0, r);
+        seaG.addColorStop(0.0, 'rgba(80,170,255,0.08)');
+        seaG.addColorStop(0.55,'rgba(80,220,255,0.12)');
+        seaG.addColorStop(1.0, 'rgba(160,240,255,0.08)');
+        ctx.fillStyle = seaG;
+        ctx.fillRect(-r, r*0.05, r*2, r);
+        ctx.restore();
+
+        // a few surface lights
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i=0;i<14;i++){
+          const a = planet.rot*0.7 + i*0.44;
+          const pr = r * (0.32 + 0.42*((Math.sin(i*9.2)+1)/2));
+          const px = cx + Math.cos(a) * pr * 0.75;
+          const py = cy + Math.sin(a*1.1) * pr * 0.55;
+          ctx.fillStyle = `rgba(255,255,255,${0.04 + 0.05*((Math.sin(tSec*0.8+i)+1)/2)})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1.2 + 1.8*((Math.cos(tSec+i)+1)/2), 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // highlight
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const hl = ctx.createRadialGradient(cx - r*0.30, cy - r*0.30, r*0.05, cx - r*0.30, cy - r*0.30, r*0.62);
+        hl.addColorStop(0.0, 'rgba(255,255,255,0.22)');
+        hl.addColorStop(0.55,'rgba(255,255,255,0.06)');
+        hl.addColorStop(1.0, 'rgba(255,255,255,0)');
+        ctx.fillStyle = hl;
+        ctx.beginPath();
+        ctx.arc(cx - r*0.10, cy - r*0.10, r*0.86, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore(); // clip
+
+        // rim
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+
+        // tiny “hint” labels on the planet (very subtle)
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = 'rgba(244,248,255,0.60)';
+        ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('tap sky', cx, cy - r*0.58);
+        ctx.fillText('tap land', cx, cy + r*0.05);
+        ctx.fillText('tap sea', cx, cy + r*0.62);
+        ctx.restore();
+      }
+
+      function planetHit(x,y){
+        const dx = x - planet.cx;
+        const dy = y - planet.cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        const r = planet.r;
+
+        if (dist > r*1.18) return null;
+
+        // Atmosphere ring = SKY biome
+        if (dist >= r*0.88 && dist <= r*1.18){
+          return 'sky';
+        }
+
+        // Inside: decide by vertical zone
+        const ny = dy / r; // -1..1
+        if (ny < -0.18) return 'sky';
+        if (ny < 0.28) return 'land';
+        return 'sea';
+      }
+
+      // ---------- Biome drawing ----------
+      function drawBiome(which, tSec, nowMs){
+        // Background color per biome
+        if (which === 'sky'){
+          const g = ctx.createLinearGradient(0,0,0,h);
+          g.addColorStop(0, 'rgba(10,24,58,1)');
+          g.addColorStop(0.55, 'rgba(18,40,92,1)');
+          g.addColorStop(1, 'rgba(8,18,52,1)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0,0,w,h);
+
+          // soft stars still
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          drawStarLayer(starsFar,  tSec, 14, 10);
+          ctx.restore();
+
+          // clouds
+          for (const c of biome.clouds){
+            c.x += c.vx * (1/60);
+            if (c.x < -120) c.x = w + 120;
+            if (c.x > w + 120) c.x = -120;
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            ctx.globalAlpha = c.a;
+            const cg = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r*2.3);
+            cg.addColorStop(0, 'rgba(255,255,255,0.18)');
+            cg.addColorStop(0.55,'rgba(180,230,255,0.10)');
+            cg.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = cg;
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, c.r*2.2, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+
+        if (which === 'land'){
+          const g = ctx.createLinearGradient(0,0,0,h);
+          g.addColorStop(0, 'rgba(8,18,50,1)');
+          g.addColorStop(0.55, 'rgba(10,30,62,1)');
+          g.addColorStop(1, 'rgba(6,12,34,1)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0,0,w,h);
+
+          // ground glow
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          const gg = ctx.createRadialGradient(w*0.5, h*0.95, 0, w*0.5, h*0.95, Math.min(w,h)*0.85);
+          gg.addColorStop(0.0, 'rgba(140,255,220,0.10)');
+          gg.addColorStop(0.65,'rgba(120,170,255,0.06)');
+          gg.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gg;
+          ctx.fillRect(0,0,w,h);
+          ctx.restore();
+
+          // plants / pebbles
+          for (const d of biome.decor){
+            const sway = Math.sin(tSec * (0.9 + d.sway*0.4) + d.x*0.01) * 4;
+            if (d.kind === 'sprout'){
+              ctx.save();
+              ctx.globalCompositeOperation = 'screen';
+              ctx.strokeStyle = 'rgba(140,255,220,0.10)';
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.moveTo(d.x, d.y);
+              ctx.quadraticCurveTo(d.x + sway, d.y - d.h*0.55, d.x + sway*0.4, d.y - d.h);
+              ctx.stroke();
+
+              ctx.fillStyle = 'rgba(180,255,240,0.12)';
+              ctx.beginPath();
+              ctx.ellipse(d.x + sway*0.4, d.y - d.h, 8, 5, 0.4, 0, Math.PI*2);
+              ctx.fill();
+              ctx.restore();
+            }else{
+              ctx.save();
+              ctx.globalCompositeOperation = 'screen';
+              ctx.fillStyle = 'rgba(255,255,255,0.06)';
+              ctx.beginPath();
+              ctx.arc(d.x, d.y, 6 + (d.h*0.10), 0, Math.PI*2);
+              ctx.fill();
+              ctx.restore();
+            }
+          }
+        }
+
+        if (which === 'sea'){
+          const g = ctx.createLinearGradient(0,0,0,h);
+          g.addColorStop(0, 'rgba(6,14,40,1)');
+          g.addColorStop(0.55, 'rgba(8,28,68,1)');
+          g.addColorStop(1, 'rgba(4,10,26,1)');
+          ctx.fillStyle = g;
+          ctx.fillRect(0,0,w,h);
+
+          // water glow
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          const wg = ctx.createRadialGradient(w*0.5, h*0.65, 0, w*0.5, h*0.65, Math.min(w,h)*0.90);
+          wg.addColorStop(0.0, 'rgba(80,220,255,0.12)');
+          wg.addColorStop(0.55,'rgba(120,170,255,0.08)');
+          wg.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = wg;
+          ctx.fillRect(0,0,w,h);
+          ctx.restore();
+
+          // bubbles drifting up
+          for (const b of biome.bubbles){
+            b.y -= b.vy * (1/60);
+            if (b.y < -40){
+              b.y = h + 40;
+              b.x = rand(w*0.10, w*0.90);
+              b.r = rand(4, 14);
+              b.vy = rand(12, 32);
+              b.a = rand(0.05, 0.14);
+            }
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            ctx.globalAlpha = b.a;
+            ctx.strokeStyle = 'rgba(255,255,255,0.40)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+
+        // draw actors
+        for (const a of biome.actors) drawBiomeActor(a, which, tSec);
+      }
+
+      function drawBiomeActor(a, which, tSec){
+        // subtle idle drift
+        if (a.state === 'idle'){
+          a.x += a.vx * (1/60);
+          a.y += a.vy * (1/60);
+
+          // bounce bounds by biome
+          const padX = 60;
+          const padYTop = (which==='land') ? h*0.50 : 80;
+          const padYBot = (which==='sky') ? h*0.72 : h - 80;
+
+          if (a.x < padX || a.x > w - padX) a.vx *= -1;
+          if (a.y < padYTop || a.y > padYBot) a.vy *= -1;
+        }
+
+        // directed movement (tap sets target)
+        if (a.tx != null && a.ty != null){
+          const dx = a.tx - a.x;
+          const dy = a.ty - a.y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          const speed = (which === 'sky') ? 120 : (which === 'sea' ? 95 : 70);
+          if (dist > 2){
+            a.x += (dx / dist) * speed * (1/60);
+            a.y += (dy / dist) * speed * (1/60);
+          }else{
+            a.tx = null; a.ty = null;
+          }
+        }
+
+        // swell animation
+        if (a.state === 'swell'){
+          const t = clamp((performance.now() - a.t0) / 950, 0, 1);
+          a.scale = lerp(1.0, 1.75, easeOutCubic(t));
+          if (t >= 1){
+            a.state = 'return';
+            a.t0 = performance.now();
+          }
+        } else if (a.state === 'return'){
+          const t = clamp((performance.now() - a.t0) / 700, 0, 1);
+          a.scale = lerp(1.75, 1.0, easeOutCubic(t));
+          if (t >= 1){
+            a.state = 'idle';
+            a.scale = 1;
+          }
+        } else {
+          // tiny breathing
+          a.scale = a.scale * 0.98 + (1 + 0.015*Math.sin(tSec*1.2 + a.hue*0.02)) * 0.02;
+        }
+
+        // draw body
+        const rr = a.r * a.scale;
+
+        // color from hue (gentle)
+        const core = hslToRgb(a.hue, 72, 74);
+        const glow = hslToRgb(a.hue + 18, 90, 62);
+
+        // halo
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const halo = ctx.createRadialGradient(a.x, a.y, rr*0.20, a.x, a.y, rr*2.2);
+        halo.addColorStop(0.0, toRGBA(glow, 0.14));
+        halo.addColorStop(0.55, toRGBA(glow, 0.05));
+        halo.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = halo;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        // body
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const body = ctx.createRadialGradient(a.x, a.y, rr*0.04, a.x, a.y, rr*1.0);
+        body.addColorStop(0.0, toRGBA(core, 0.92));
+        body.addColorStop(0.35, toRGBA(glow, 0.26));
+        body.addColorStop(0.85, toRGBA(glow, 0.10));
+        body.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, rr, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // highlight
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const hl = ctx.createRadialGradient(a.x - rr*0.25, a.y - rr*0.25, rr*0.02, a.x - rr*0.25, a.y - rr*0.25, rr*0.52);
+        hl.addColorStop(0.0, 'rgba(255,255,255,0.35)');
+        hl.addColorStop(0.5, 'rgba(255,255,255,0.08)');
+        hl.addColorStop(1.0, 'rgba(255,255,255,0)');
+        ctx.fillStyle = hl;
+        ctx.filter = 'blur(0.6px)';
+        ctx.beginPath();
+        ctx.arc(a.x - rr*0.10, a.y - rr*0.10, rr*0.62, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // little silhouette “wings/fin/leaf” hint based on biome (purely visual)
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.10;
+        ctx.fillStyle = 'rgba(255,255,255,1)';
+        if (which === 'sky'){
+          ctx.beginPath();
+          ctx.ellipse(a.x - rr*0.55, a.y, rr*0.55, rr*0.25, -0.3, 0, Math.PI*2);
+          ctx.ellipse(a.x + rr*0.55, a.y, rr*0.55, rr*0.25, 0.3, 0, Math.PI*2);
+          ctx.fill();
+        } else if (which === 'sea'){
+          ctx.beginPath();
+          ctx.ellipse(a.x + rr*0.55, a.y, rr*0.40, rr*0.22, 0.0, 0, Math.PI*2);
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.ellipse(a.x, a.y + rr*0.55, rr*0.30, rr*0.18, 0.0, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function hslToRgb(h, s, l){
+        h = ((h % 360) + 360) % 360;
+        s /= 100; l /= 100;
+        const c = (1 - Math.abs(2*l - 1)) * s;
+        const x = c * (1 - Math.abs((h/60) % 2 - 1));
+        const m = l - c/2;
+        let r=0,g=0,b=0;
+        if (h < 60){ r=c; g=x; b=0; }
+        else if (h < 120){ r=x; g=c; b=0; }
+        else if (h < 180){ r=0; g=c; b=x; }
+        else if (h < 240){ r=0; g=x; b=c; }
+        else if (h < 300){ r=x; g=0; b=c; }
+        else { r=c; g=0; b=x; }
+        return { r:(r+m)*255, g:(g+m)*255, b:(b+m)*255 };
+      }
+
+      // ---------- Hit tests ----------
+      function hitSatellite(x,y){
+        for (let i = satellites.length - 1; i >= 0; i--){
+          const s = satellites[i];
+          const rr = s.rBase * 1.75;
+          const dx = x - s.x;
+          const dy = y - s.y;
+          if (dx*dx + dy*dy <= rr*rr) return i;
+        }
+        return -1;
+      }
+      function inMainStarHit(x,y){
+        const r = star.rBase * 1.22;
+        const dx = x - star.cx;
+        const dy = y - star.cy;
+        return (dx*dx + dy*dy) <= (r*r);
+      }
+
+      function hitBiomeActor(x,y){
+        // last drawn order is fine; reverse for “top-most”
+        for (let i = biome.actors.length - 1; i >= 0; i--){
+          const a = biome.actors[i];
+          const rr = a.r * 1.7;
+          const dx = x - a.x;
+          const dy = y - a.y;
+          if (dx*dx + dy*dy <= rr*rr) return i;
+        }
+        return -1;
+      }
+
+      // ---------- Drag in space ----------
+      const drag = { active:false, satIndex:-1, pointerId:null };
+
       // ---------- Input ----------
       canvas.addEventListener('pointerdown', (e) => {
         if (!allowInput) return;
@@ -986,34 +1556,98 @@
         const y = (e.clientY - rect.top);
         const now = performance.now();
 
-        const idx = hitSatellite(x,y);
-        if (idx !== -1){
-          const s = satellites[idx];
+        // If transitioning, ignore taps
+        if (scene.transition) return;
 
-          // Satellite interaction:
-          startSatelliteSwell(s, now);
+        if (scene.current === 'space'){
+          const idx = hitSatellite(x,y);
+          if (idx !== -1){
+            const s = satellites[idx];
+            startSatelliteSwell(s, now);
 
-          // Show a calm universe message (only if none currently playing)
-          playUniverseMessage();
+            // gentle “universe” line, but shorter here
+            if (!messagePlaying){
+              playOneLineMessage("Tiny satellites can move.\n\nDrag them to change their path…", 5200);
+            }
 
-          // Dragging
-          drag.active = true;
-          drag.satIndex = idx;
-          drag.pointerId = e.pointerId;
-          s.dragging = true;
+            // Dragging
+            drag.active = true;
+            drag.satIndex = idx;
+            drag.pointerId = e.pointerId;
+            s.dragging = true;
 
-          s.x = x; s.y = y;
-          canvas.setPointerCapture?.(e.pointerId);
+            s.x = x; s.y = y;
+            canvas.setPointerCapture?.(e.pointerId);
+            return;
+          }
+
+          if (inMainStarHit(x,y)){
+            startMainBloom(now);
+            return;
+          }
+
           return;
         }
 
-        if (inMainStarHit(x,y)){
-          startMainBloom(now);
+        if (scene.current === 'planet'){
+          const hit = planetHit(x,y);
+          if (hit){
+            // zoom into selected biome
+            scene.biome = hit;
+            beginTransition('biome', { dur: 1200, kind:'zoom', biome: hit });
+
+            // set camera target for zoom “into” the planet area
+            setCameraTarget(0, 0, 1); // reset drift
+            // a little “push” toward planet
+            const zoom = 2.15;
+            setCameraTarget( (planet.cx - w*0.5) * 0.35, (planet.cy - h*0.5) * 0.35, zoom );
+
+            // prep biome content immediately (so it’s ready during transition)
+            resetBiome(hit);
+
+            // tiny info message
+            if (!messagePlaying){
+              const title = hit === 'sky' ? "Sky Boo" : hit === 'land' ? "Land Boo" : "Sea Boo";
+              playOneLineMessage(`${title}\n\nTap creatures to guide them.\nTap again to learn their name.`, 5600);
+            }
+          }
+          return;
+        }
+
+        if (scene.current === 'biome'){
+          const idx = hitBiomeActor(x,y);
+          if (idx !== -1){
+            const a = biome.actors[idx];
+
+            // First: direct the creature toward the tap (always)
+            a.tx = x;
+            a.ty = y;
+
+            // Then: if no message playing, show who it is
+            if (!messagePlaying){
+              playOneLineMessage(a.info, 6200);
+            }
+
+            // Swell for tactile feedback
+            a.state = 'swell';
+            a.t0 = now;
+            return;
+          }
+
+          // Tapping empty area: gentle “ripple” action — direct all toward a calm point
+          for (const a of biome.actors){
+            if (Math.random() < 0.55){
+              a.tx = x + rand(-40, 40);
+              a.ty = y + rand(-40, 40);
+            }
+          }
+          return;
         }
       }, { passive:false });
 
       canvas.addEventListener('pointermove', (e) => {
         if (!allowInput) return;
+        if (scene.current !== 'space') return;
         if (!drag.active) return;
         if (drag.pointerId !== e.pointerId) return;
 
@@ -1029,6 +1663,7 @@
       }, { passive:false });
 
       function endDrag(e){
+        if (scene.current !== 'space') return;
         if (!drag.active) return;
         if (drag.pointerId !== e.pointerId) return;
 
@@ -1065,42 +1700,190 @@
         setScreen('play');
         pressToPlay.style.display = 'block';
         allowInput = true;
+
+        // show buttons only after start
+        visitBtn.style.display = 'inline-block';
+        homeBtn.style.display = 'inline-block';
+        homeBtn.disabled = true;
+
+        // start in space
+        goSpace(true);
       });
 
-      // ---------- Animation loop ----------
+      // ---------- Navigation ----------
+      function goSpace(instant=false){
+        scene.current = 'space';
+        scene.biome = null;
+        scene.transition = null;
+
+        homeBtn.disabled = true;
+        visitBtn.disabled = false;
+
+        if (instant){
+          cam.x = cam.tx = 0;
+          cam.y = cam.ty = 0;
+          cam.z = cam.tz = 1;
+        }else{
+          setCameraTarget(0,0,1);
+        }
+      }
+
+      function goPlanet(instant=false){
+        scene.current = 'planet';
+        scene.biome = null;
+        scene.transition = null;
+
+        homeBtn.disabled = false;
+        visitBtn.disabled = true;
+
+        if (instant){
+          cam.x = cam.tx = 0;
+          cam.y = cam.ty = 0;
+          cam.z = cam.tz = 1;
+        }else{
+          setCameraTarget(0,0,1);
+        }
+
+        if (!messagePlaying){
+          playOneLineMessage("Planet Boo is here.\n\nTap the sky, land, or sea…", 5400);
+        }
+      }
+
+      visitBtn.addEventListener('click', () => {
+        if (!allowInput) return;
+        if (scene.transition) return;
+
+        // gentle zoom shift into planet scene
+        beginTransition('planet', { dur: 1400, kind:'zoom' });
+
+        // move camera to “approach” the planet
+        setCameraTarget( (planet.cx - w*0.5) * 0.18, (planet.cy - h*0.5) * 0.18, 1.18 );
+      });
+
+      homeBtn.addEventListener('click', () => {
+        if (!allowInput) return;
+        if (scene.transition) return;
+
+        // if in biome, go back to planet first
+        if (scene.current === 'biome'){
+          beginTransition('planet', { dur: 1100, kind:'zoom' });
+          setCameraTarget(0,0,1.10);
+          return;
+        }
+        // if in planet, return to space
+        if (scene.current === 'planet'){
+          beginTransition('space', { dur: 1200, kind:'zoom' });
+          setCameraTarget(0,0,1);
+        }
+      });
+
+      // ---------- Transitions handling ----------
+      function updateTransition(nowMs){
+        if (!scene.transition) return;
+
+        const tr = scene.transition;
+        const t = clamp((nowMs - tr.t0) / tr.dur, 0, 1);
+        const e = easeInOutSine(t);
+
+        // We keep drawing both scenes implicitly by:
+        // - switching at 60% to the target (feels like “arrive”)
+        if (t >= 0.60 && scene.current !== tr.to){
+          scene.current = tr.to;
+          scene.biome = tr.biome ?? scene.biome;
+
+          // camera settle
+          if (tr.to === 'planet'){
+            goPlanet(true);
+            setCameraTarget(0,0,1);
+          } else if (tr.to === 'space'){
+            goSpace(true);
+            setCameraTarget(0,0,1);
+          } else if (tr.to === 'biome'){
+            // stay in biome; camera settles to a comfy zoom (like “in the layer”)
+            homeBtn.disabled = false;
+            visitBtn.disabled = true;
+            setCameraTarget(0,0,1); // draw biome full-screen; no extra camera shift
+          }
+        }
+
+        // Fade “press to play” in space only
+        pressToPlay.style.display = (scene.current === 'space') ? 'block' : 'none';
+
+        // Finalize
+        if (t >= 1){
+          scene.transition = null;
+
+          // Ensure correct button enable state
+          if (scene.current === 'space'){
+            homeBtn.disabled = true;
+            visitBtn.disabled = false;
+          } else if (scene.current === 'planet'){
+            homeBtn.disabled = false;
+            visitBtn.disabled = true;
+          } else {
+            homeBtn.disabled = false;
+            visitBtn.disabled = true;
+          }
+
+          // camera settle
+          if (scene.current === 'space') setCameraTarget(0,0,1);
+          if (scene.current === 'planet') setCameraTarget(0,0,1);
+          if (scene.current === 'biome') setCameraTarget(0,0,1);
+        }
+      }
+
+      // ---------- Loop ----------
       function tick(nowMs){
         const dt = (nowMs - lastMs) * 0.001;
         lastMs = nowMs;
         const tSec = nowMs * 0.001;
 
+        // update camera + transitions
+        updateTransition(nowMs);
+        updateCamera(dt);
+
+        // per-scene updates
         star.rot  += dt * 0.18;
         star.rot2 += dt * 0.11;
 
         updatePalette(nowMs);
         updateMainBloom(nowMs);
 
-        updateSatellitePositions(dt);
-        for (const s of satellites) updateSatelliteSwell(s, nowMs);
+        if (scene.current === 'space'){
+          updateSatellitePositions(dt);
+          for (const s of satellites) updateSatelliteSwell(s, nowMs);
+        }
 
-        drawBackground(tSec);
+        // draw
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        drawSpaceBackground(tSec);
 
-        // satellites behind star
-        for (const s of satellites) drawSatellite(s);
+        // Apply camera transform (subtle, mostly identity)
+        applyCamera();
 
-        // star
-        drawMainStar(tSec, nowMs);
+        if (scene.current === 'space'){
+          // satellites behind star
+          for (const s of satellites) drawSatellite(s);
+          drawMainStar(tSec, nowMs);
+        } else if (scene.current === 'planet'){
+          drawPlanetBoo(tSec);
+        } else if (scene.current === 'biome'){
+          drawBiome(scene.biome || 'sky', tSec, nowMs);
+        }
 
         requestAnimationFrame(tick);
       }
       requestAnimationFrame(tick);
 
-      // Safety
+      // ---------- Visibility safety ----------
       document.addEventListener('visibilitychange', () => {
         if (document.hidden){
+          // reset star
           star.state = 'idle';
           star.scale = 1;
           star.intensity = 1;
 
+          // reset space drag
           for (const s of satellites){
             s.state = 'idle';
             s.scale = 1;
@@ -1111,12 +1894,23 @@
           drag.satIndex = -1;
           drag.pointerId = null;
 
-          // stop any playing message cleanly
+          // stop messages cleanly
           messagePlaying = false;
           clearMessageTimers();
           hideMessage();
+
+          // reset transitions
+          scene.transition = null;
         }
       });
+
+      // ---------- Init mini UI state ----------
+      visitBtn.style.display = 'none';
+      homeBtn.style.display = 'none';
+
+      // ---------- Default: start in welcome ----------
+      pressToPlay.style.display = 'none';
+
     })();
   </script>
 </body>
