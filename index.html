@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Boo Planet (v1.4)</title>
+  <title>Boo Planet (v1.5)</title>
 
   <!-- Retro arcade font (online). If you want offline, download and self-host. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,7 +45,7 @@
       width:100%;
       height:100%;
       display:block;
-      touch-action:none; /* we manage dragging + taps */
+      touch-action:none;
     }
 
     .ui{
@@ -149,7 +149,6 @@
       text-align:center;
     }
 
-    /* Bottom center "Press to Play" */
     .pressToPlay{
       position:fixed;
       left:0;
@@ -171,7 +170,6 @@
       opacity: 0.95;
     }
 
-    /* Floating message overlay (fade in/out via JS) */
     .messageWrap{
       position:fixed;
       left: 12px;
@@ -213,12 +211,7 @@
       margin:0;
       white-space:pre-wrap;
     }
-    .messageText strong{
-      font-weight: 800;
-      color: rgba(244,248,255,0.96);
-    }
 
-    /* Back button */
     .backBtn{
       position: fixed;
       left: 12px;
@@ -246,7 +239,6 @@
     }
     .backBtn:active{ transform: translateY(1px) scale(0.99); }
 
-    /* ✅ Copyright (small, unobtrusive, appears on all screens) */
     .copyrightMark{
       position:fixed;
       left:0;
@@ -279,7 +271,6 @@
     <source src="assets/music/boo-planet.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Message overlay -->
   <div class="messageWrap" aria-hidden="true">
     <div class="messageCard" id="messageCard">
       <p class="messageText" id="messageText"></p>
@@ -289,7 +280,6 @@
   <button class="backBtn" id="backBtn" type="button" aria-label="Back">BACK</button>
 
   <div class="ui">
-    <!-- WELCOME -->
     <div class="panel screen active" id="welcome">
       <div class="stack">
         <h1 class="titleArcade">Boo Planet</h1>
@@ -297,27 +287,22 @@
         <div class="copy">
           <p><strong style="color:rgba(244,248,255,0.95);">This is a sensory cause-and-effect playground.</strong></p>
           <p>A first interaction with screens and a way for your little ones to develop without overstimulation or “wrong” inputs.</p>
-          <p>Press the star to see it glow, push and pull the satellites to change their trajectory… and <strong>double tap</strong> the star to travel to Boo Planet.</p>
+          <p>Press the star to see it glow, push and pull the satellites to change their trajectory… and <strong>double tap</strong> the star to travel.</p>
           <ul>
             <li><strong>Cause &amp; effect understanding</strong></li>
-            <li><strong>Motor control</strong></li>
-            <li><strong>Sensory processing</strong></li>
-            <li><strong>Emotional safety with screens</strong></li>
+            <li><strong>finer motor skills</strong></li>
           </ul>
         </div>
 
         <button class="startBtn" id="startBtn" type="button" aria-label="Start Boo Planet">START</button>
-        <div class="hint">Tap START to begin.</div>
+        <div class="hint"></div>
       </div>
     </div>
 
-    <!-- PLAY (no center panel) -->
     <div class="screen" id="play"></div>
   </div>
 
-  <div class="pressToPlay" id="pressToPlay">Press to Play</div>
-
-  <!-- ✅ Copyright mark (visible across welcome + play) -->
+  <div class="pressToPlay" id="pressToPlay"></div>
   <div class="copyrightMark">© 2026 Boo Industries. All rights reserved.</div>
 
   <script>
@@ -332,7 +317,6 @@
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
 
       const rand = (a,b)=> lerp(a,b,Math.random());
-      const hypot2 = (dx,dy)=> dx*dx+dy*dy;
 
       // ---------- DOM ----------
       const canvas = document.getElementById('stage');
@@ -351,22 +335,6 @@
 
       // ---------- Sizing ----------
       let w=0, h=0, dpr=1;
-
-      function resize(){
-        dpr = Math.min(2, window.devicePixelRatio || 1);
-        w = Math.floor(window.innerWidth);
-        h = Math.floor(window.innerHeight);
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        computeLayout();
-        initSatellites();
-        initLanterns(); // keep lanterns stable-ish on resize
-      }
-      window.addEventListener('resize', resize, { passive:true });
 
       // ---------- Background Starfield ----------
       function makeStars(count, depthMin, depthMax){
@@ -503,21 +471,6 @@
       }
 
       // ---------- Content ----------
-      const UNIVERSE_MESSAGES = [
-        { parts: ["Our universe is old…","The galaxy where we live, the Milky Way, is an estimated 13.6 billion years old!"] },
-        { text: "Space is so big… even light, the fastest thing we know, takes time to travel." },
-        { text: "Stars are very far away… the sunlight we feel is about 8 minutes old when it reaches us." },
-        { text: "The Milky Way is huge… it holds hundreds of billions of stars, like a sparkling ocean." },
-        { text: "We live on a celestial planet… Earth orbits our own star: The Sun." },
-        { text: "Some stars are giants… many could fit our Sun inside them again and again." },
-        { text: "Some stars are newborns… forming slowly inside soft clouds of cosmic dust." },
-        { text: "There are many galaxies… and each one is its own great swirl of stars." },
-        { text: "Space has quiet travelers… comets and asteroids drift for a long time, far from home." },
-        { text: "Gravity is a gentle pull… it helps planets stay in their paths around stars." },
-        { text: "We are made of star-stuff… the atoms in our bodies were once part of ancient stars." }
-      ];
-      let universeIndex = 0;
-
       const MOON_FACTS = [
         "Moon fact: Our Moon helps steady Earth’s tilt — that makes seasons more gentle and predictable.",
         "Moon fact: The Moon is moving away from Earth a tiny bit each year (about the width of a fingernail).",
@@ -546,15 +499,16 @@
       ];
 
       // ---------- Scenes ----------
-      // scene = 'star' (opening play scene), 'planet' (Boo Planet + moon), 'lantern' (bigger planet + lantern swarm)
+      // 'star' -> 'planet' -> 'lantern'
       let scene = 'star';
+      let allowInput = false;
 
       function updateBackButton(){
         const show = (allowInput && (scene === 'planet' || scene === 'lantern'));
         backBtn.style.display = show ? 'block' : 'none';
       }
 
-      // ---------- Celestial objects (Star + Boo Planet) ----------
+      // ---------- Celestial objects ----------
       function makeCelestial(){
         return {
           cx:0, cy:0, rBase:0,
@@ -565,7 +519,11 @@
           t0:0,
           bloomUpMs: 8000,
           returnMs: 2400,
-          warpMs: 900
+
+          // ✅ slower, more ceremonial transitions
+          warpUpMs: 2000,    // swell duration
+          warpHoldMs: 650,   // linger at 5x
+          warpDownMs: 450    // tiny settle (visual breath)
         };
       }
 
@@ -573,30 +531,70 @@
       const booPlanet = makeCelestial();
       const booPlanetBig = makeCelestial();
 
+      // ---------- Satellites (star scene) ----------
+      const satellites = [];
+      const SAT_COUNT = 5;
+
+      // ---------- Moon (planet scene) ----------
+      const moon = {
+        orbitR: 0,
+        angle: 0,
+        omega: (Math.PI * 2) / 24, // 24s per revolution
+        x: 0, y: 0,
+        rBase: 18,
+        glow: 0
+      };
+
+      // ---------- Lanterns (lantern scene) ----------
+      const LANTERN_COUNT = 16;
+      const lanterns = [];
+      let holidayOrder = [];
+      let holidayPtr = 0;
+
+      function shuffle(arr){
+        for (let i=arr.length-1;i>0;i--){
+          const j = (Math.random() * (i+1)) | 0;
+          [arr[i],arr[j]] = [arr[j],arr[i]];
+        }
+        return arr;
+      }
+
+      // ---------- Layout + Resize ----------
       function computeLayout(){
         const minDim = Math.min(w, h);
 
-        // Star scene layout
         star.cx = w * 0.5;
         star.cy = h * 0.42;
         star.rBase = clamp(minDim * 0.165, 96, 190);
 
-        // Planet scene layout
         booPlanet.cx = w * 0.5;
         booPlanet.cy = h * 0.46;
         booPlanet.rBase = clamp(minDim * 0.175, 100, 210);
 
-        // Lantern scene layout (planet 1.7x larger than Boo Planet)
         booPlanetBig.cx = w * 0.5;
         booPlanetBig.cy = h * 0.52;
         booPlanetBig.rBase = booPlanet.rBase * 1.7;
       }
 
-      // ---------- Satellites (only in star scene) ----------
-      const satellites = [];
-      const SAT_COUNT = 5;
+      function resize(){
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = Math.floor(window.innerWidth);
+        h = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      function initSatellites(){
+        computeLayout();
+        initSatellites(true);
+        initLanterns(true);
+      }
+      window.addEventListener('resize', resize, { passive:true });
+
+      // ---------- Init satellites ----------
+      function initSatellites(force=false){
+        if (satellites.length && !force) return;
         satellites.length = 0;
         for(let i=0;i<SAT_COUNT;i++){
           const baseR = star.rBase * rand(1.20, 1.95);
@@ -620,63 +618,45 @@
         }
       }
 
-      // ---------- Moon (planet scene) ----------
-      const moon = {
-        orbitR: 0,
-        angle: 0,
-        omega: (Math.PI * 2) / 24, // one revolution every 24 seconds
-        x: 0, y: 0,
-        rBase: 18,
-        glow: 0
-      };
-
-      function updateMoon(dt, nowMs){
-        const base = booPlanet.rBase * (scene === 'planet' ? booPlanet.scale : 1);
-        moon.orbitR = clamp(base * 1.55, 120, Math.min(w,h) * 0.42);
-        moon.rBase = clamp(base * 0.16, 16, 34);
-
-        moon.angle += moon.omega * dt;
-        moon.x = booPlanet.cx + Math.cos(moon.angle) * moon.orbitR;
-        moon.y = booPlanet.cy + Math.sin(moon.angle) * moon.orbitR * 0.72;
-
-        moon.glow = Math.max(0, moon.glow - dt * 1.6);
-      }
-
-      // ---------- Lanterns (lantern scene) ----------
-      const LANTERN_COUNT = 16;
-      const lanterns = [];
-      let holidayOrder = [];
-      let holidayPtr = 0;
-
-      function shuffle(arr){
-        for (let i=arr.length-1;i>0;i--){
-          const j = (Math.random() * (i+1)) | 0;
-          [arr[i],arr[j]] = [arr[j],arr[i]];
-        }
-        return arr;
-      }
-
-      function initLanterns(){
+      // ---------- Init lanterns ----------
+      function initLanterns(force=false){
+        if (lanterns.length && !force) return;
         lanterns.length = 0;
+
         const minDim = Math.min(w,h);
-        const arenaR = clamp(minDim * 0.36, 220, 520);
+        const baseOrbit = clamp(minDim * 0.40, 260, 620); // around the big planet
+
         for (let i=0;i<LANTERN_COUNT;i++){
-          const a = (i/LANTERN_COUNT) * Math.PI*2 + rand(-0.18, 0.18);
-          const rr = arenaR * rand(0.55, 0.95);
-          const x = booPlanetBig.cx + Math.cos(a) * rr;
-          const y = booPlanetBig.cy + Math.sin(a) * rr * 0.68;
+          const a = (i/LANTERN_COUNT) * Math.PI*2 + rand(-0.22, 0.22);
+          const orbitR = baseOrbit * rand(0.72, 1.02);
+          const targetX = booPlanetBig.cx + Math.cos(a) * orbitR;
+          const targetY = booPlanetBig.cy + Math.sin(a) * orbitR * 0.70;
 
           lanterns.push({
             id: i,
-            x, y,
-            vx: rand(-55,55),
-            vy: rand(-45,45),
-            r: rand(16, 24),
+
+            // position + velocity
+            x: targetX + rand(-18,18),
+            y: targetY + rand(-18,18),
+            vx: rand(-25,25),
+            vy: rand(-18,18),
+
+            // size & rotation
+            r: rand(18, 26),
             rot: rand(0, Math.PI*2),
-            rotSp: rand(-1.4, 1.4),
-            glow: 0,
+            rotSp: rand(-0.85, 0.85),
+
+            // orbital path (gentle revolving)
+            orbitA: a,
+            orbitR: orbitR,
+            orbitOmega: rand(0.08, 0.14) * (Math.random()<0.5 ? 1 : -1), // period ~45–78s
+
+            // float + flicker
             wob: rand(0, Math.PI*2),
-            wobSp: rand(0.6, 1.25)
+            wobSp: rand(0.65, 1.20),
+            flick: rand(0, Math.PI*2),
+
+            glow: 0
           });
         }
 
@@ -684,155 +664,7 @@
         holidayPtr = 0;
       }
 
-      function collideLanterns(dt){
-        // soft arena bounds
-        const minDim = Math.min(w,h);
-        const arenaR = clamp(minDim * 0.41, 260, 600);
-        const cx = booPlanetBig.cx;
-        const cy = booPlanetBig.cy;
-
-        // move
-        for (const p of lanterns){
-          p.wob += p.wobSp * dt;
-          const float = Math.sin(p.wob) * 10;
-
-          p.x += p.vx * dt;
-          p.y += p.vy * dt + float * dt * 0.10;
-          p.rot += p.rotSp * dt;
-
-          // gentle drag
-          p.vx *= Math.pow(0.985, dt*60);
-          p.vy *= Math.pow(0.985, dt*60);
-
-          // keep within a soft circular arena (bounce)
-          const dx = p.x - cx;
-          const dy = p.y - cy;
-          const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-          const maxDist = arenaR - p.r;
-          if (dist > maxDist){
-            const nx = dx / dist;
-            const ny = dy / dist;
-            p.x = cx + nx * maxDist;
-            p.y = cy + ny * maxDist;
-            const vn = p.vx*nx + p.vy*ny;
-            p.vx -= (1.9 * vn) * nx;
-            p.vy -= (1.9 * vn) * ny;
-            p.glow = Math.max(p.glow, 0.65);
-          }
-
-          p.glow = Math.max(0, p.glow - dt * 1.2);
-        }
-
-        // pair collisions (16 => fine)
-        for (let i=0;i<lanterns.length;i++){
-          for (let j=i+1;j<lanterns.length;j++){
-            const a = lanterns[i], b = lanterns[j];
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const rr = a.r + b.r + 2;
-            const d2 = dx*dx + dy*dy;
-            if (d2 > 0 && d2 < rr*rr){
-              const d = Math.sqrt(d2);
-              const nx = dx / d;
-              const ny = dy / d;
-
-              // separate
-              const overlap = (rr - d);
-              a.x -= nx * overlap * 0.5;
-              a.y -= ny * overlap * 0.5;
-              b.x += nx * overlap * 0.5;
-              b.y += ny * overlap * 0.5;
-
-              // elastic-ish impulse
-              const relVx = b.vx - a.vx;
-              const relVy = b.vy - a.vy;
-              const relN = relVx*nx + relVy*ny;
-              if (relN < 0){
-                const impulse = (-relN) * 0.9;
-                a.vx -= impulse * nx;
-                a.vy -= impulse * ny;
-                b.vx += impulse * nx;
-                b.vy += impulse * ny;
-              }
-
-              a.glow = Math.max(a.glow, 0.9);
-              b.glow = Math.max(b.glow, 0.9);
-            }
-          }
-        }
-
-        // tiny “sense each other” drift (subtle cohesion)
-        for (let i=0;i<lanterns.length;i++){
-          const a = lanterns[i];
-          let ax=0, ay=0, n=0;
-          for (let j=0;j<lanterns.length;j++){
-            if (i===j) continue;
-            const b = lanterns[j];
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const d2 = dx*dx + dy*dy;
-            if (d2 < 160*160 && d2 > 1){
-              ax += dx;
-              ay += dy;
-              n++;
-            }
-          }
-          if (n){
-            ax /= n; ay /= n;
-            a.vx += ax * dt * 0.008;
-            a.vy += ay * dt * 0.008;
-          }
-        }
-      }
-
-      // ---------- Calm universe messages (star scene satellites) ----------
-      function playUniverseMessage(){
-        if (!allowInput) return;
-        if (messagePlaying) return;
-
-        messagePlaying = true;
-        clearMessageTimers();
-
-        const msg = UNIVERSE_MESSAGES[universeIndex % UNIVERSE_MESSAGES.length];
-        universeIndex++;
-
-        const totalMs = 7500;
-
-        if (msg.parts && Array.isArray(msg.parts) && msg.parts.length > 1){
-          const parts = msg.parts.slice(0, 2);
-          const partMs = Math.floor(totalMs / parts.length);
-          const fadeMs = 450;
-
-          const playPart = (text, partMs, fadeMs) => {
-            const holdMs = Math.max(0, partMs - (fadeMs * 2));
-            showMessage(text);
-            messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
-            messageTimers.push(setTimeout(() => hideMessage(), partMs));
-          };
-
-          playPart(parts[0], partMs, fadeMs);
-          messageTimers.push(setTimeout(() => playPart(parts[1], partMs, fadeMs), partMs));
-
-          messageTimers.push(setTimeout(() => {
-            hideMessage();
-            messagePlaying = false;
-          }, partMs * parts.length + 20));
-
-          return;
-        }
-
-        const fadeMs = 600;
-        const holdMs = totalMs - (fadeMs * 2);
-
-        showMessage(msg.text || "");
-        messageTimers.push(setTimeout(() => hideMessage(), fadeMs + holdMs));
-        messageTimers.push(setTimeout(() => {
-          hideMessage();
-          messagePlaying = false;
-        }, totalMs + 20));
-      }
-
-      // ---------- Celestial drawing (shared star/planet style) ----------
+      // ---------- Drawing helpers ----------
       function beginShimmerClip(r, tSec){
         const steps = 84;
         ctx.beginPath();
@@ -886,7 +718,7 @@
         ctx.restore();
       }
 
-      function drawCelestial(obj, tSec, nowMs){
+      function drawCelestial(obj, tSec){
         const r = obj.rBase * obj.scale;
         const intensity = obj.intensity;
 
@@ -1010,7 +842,7 @@
         ctx.restore();
       }
 
-      // ---------- Satellites drawing ----------
+      // ---------- Satellites ----------
       function drawSatellite(s){
         const rr = s.rBase * s.scale;
         const coolCore = { r: 210, g: 250, b: 255 };
@@ -1021,7 +853,6 @@
         const coreC = (s.tint === 'cool') ? coolCore : warmCore;
         const glowC = (s.tint === 'cool') ? coolGlow : warmGlow;
 
-        // halo
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const halo = ctx.createRadialGradient(s.x, s.y, rr*0.25, s.x, s.y, rr*2.2);
@@ -1032,7 +863,6 @@
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const body = ctx.createRadialGradient(s.x, s.y, rr*0.03, s.x, s.y, rr*1.0);
@@ -1046,7 +876,6 @@
         ctx.fill();
         ctx.restore();
 
-        // highlight
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const hl = ctx.createRadialGradient(s.x - rr*0.25, s.y - rr*0.25, rr*0.02, s.x - rr*0.25, s.y - rr*0.25, rr*0.48);
@@ -1061,9 +890,24 @@
         ctx.restore();
       }
 
-      // ---------- Moon drawing ----------
+      // ---------- Moon ----------
+      function updateMoon(dt){
+        const base = booPlanet.rBase * (scene === 'planet' ? booPlanet.scale : 1);
+
+        moon.orbitR = clamp(base * 1.55, 120, Math.min(w,h) * 0.42);
+
+        // ✅ moon larger by 2.6x (was ~0.16 of base)
+        moon.rBase = clamp(base * (0.16 * 2.6), 30, 80);
+
+        moon.angle += moon.omega * dt;
+        moon.x = booPlanet.cx + Math.cos(moon.angle) * moon.orbitR;
+        moon.y = booPlanet.cy + Math.sin(moon.angle) * moon.orbitR * 0.72;
+
+        moon.glow = Math.max(0, moon.glow - dt * 1.4);
+      }
+
       function drawMoon(tSec){
-        // faint orbit ring
+        // orbit ring
         ctx.save();
         ctx.globalAlpha = 0.22;
         ctx.strokeStyle = 'rgba(255,255,255,0.12)';
@@ -1074,25 +918,23 @@
         ctx.restore();
 
         const rr = moon.rBase;
-        const glow = 0.25 + 0.65*moon.glow;
+        const glow = 0.25 + 0.70*moon.glow;
 
-        // halo
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const halo = ctx.createRadialGradient(moon.x, moon.y, rr*0.2, moon.x, moon.y, rr*2.8);
+        const halo = ctx.createRadialGradient(moon.x, moon.y, rr*0.2, moon.x, moon.y, rr*3.0);
         halo.addColorStop(0.0, `rgba(200,240,255,${0.18*glow})`);
-        halo.addColorStop(0.55, `rgba(180,220,255,${0.06*glow})`);
+        halo.addColorStop(0.55, `rgba(180,220,255,${0.07*glow})`);
         halo.addColorStop(1.0, 'rgba(0,0,0,0)');
         ctx.fillStyle = halo;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        const body = ctx.createRadialGradient(moon.x, moon.y, rr*0.05, moon.x, moon.y, rr*1.1);
-        body.addColorStop(0.0, 'rgba(245,250,255,0.95)');
-        body.addColorStop(0.45, 'rgba(200,230,255,0.34)');
+        const body = ctx.createRadialGradient(moon.x, moon.y, rr*0.05, moon.x, moon.y, rr*1.12);
+        body.addColorStop(0.0, 'rgba(245,250,255,0.96)');
+        body.addColorStop(0.45, 'rgba(200,230,255,0.36)');
         body.addColorStop(1.0, 'rgba(0,0,0,0)');
         ctx.fillStyle = body;
         ctx.beginPath();
@@ -1100,81 +942,223 @@
         ctx.fill();
         ctx.restore();
 
-        // tiny crater specks
+        // subtle crater specks
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.15;
-        for (let i=0;i<8;i++){
-          const a = tSec*0.25 + i*0.88;
-          const pr = rr * rand(0.15, 0.75);
+        ctx.globalAlpha = 0.14;
+        for (let i=0;i<10;i++){
+          const a = tSec*0.22 + i*0.78;
+          const pr = rr * rand(0.12, 0.78);
           const px = moon.x + Math.cos(a) * pr * 0.55;
           const py = moon.y + Math.sin(a*1.12) * pr * 0.45;
           ctx.fillStyle = 'rgba(255,255,255,0.55)';
           ctx.beginPath();
-          ctx.arc(px, py, rand(0.6, 1.6), 0, Math.PI*2);
+          ctx.arc(px, py, rand(0.8, 2.0), 0, Math.PI*2);
           ctx.fill();
         }
         ctx.restore();
       }
 
-      // ---------- Lantern drawing ----------
+      // ---------- Lanterns (cozy orange + autonomous float + gentle revolution + bumps) ----------
+      function updateLanterns(dt){
+        const cx = booPlanetBig.cx;
+        const cy = booPlanetBig.cy;
+
+        // orbital + float + flicker
+        for (const p of lanterns){
+          p.orbitA += p.orbitOmega * dt;
+
+          p.wob += p.wobSp * dt;
+          p.flick += (1.6 + p.wobSp) * dt;
+
+          // target position on orbit (elliptical feel)
+          const tx = cx + Math.cos(p.orbitA) * p.orbitR;
+          const ty = cy + Math.sin(p.orbitA) * p.orbitR * 0.70;
+
+          // gentle wandering offset
+          const wx = Math.sin(p.wob * 0.9 + p.id) * 18 + Math.cos(p.wob * 0.55) * 9;
+          const wy = Math.cos(p.wob * 1.05 + p.id*0.7) * 14;
+
+          // spring toward target (makes them revolve rather than “bumble”)
+          const dx = (tx + wx) - p.x;
+          const dy = (ty + wy) - p.y;
+
+          const spring = 0.55;      // strength of orbit follow
+          const accelX = dx * spring;
+          const accelY = dy * spring;
+
+          // subtle autonomous drift (keeps it alive)
+          const drift = 18;
+          const noiseX = Math.sin(p.wob*1.7 + p.id*2.1) * drift;
+          const noiseY = Math.cos(p.wob*1.4 + p.id*1.6) * (drift * 0.8);
+
+          p.vx += (accelX + noiseX) * dt;
+          p.vy += (accelY + noiseY) * dt;
+
+          // speed cap (prevents chaos)
+          const sp = Math.hypot(p.vx, p.vy);
+          const cap = 220;
+          if (sp > cap){
+            p.vx = (p.vx / sp) * cap;
+            p.vy = (p.vy / sp) * cap;
+          }
+
+          // integrate
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+
+          // damping (less sticky than before)
+          const damp = Math.pow(0.986, dt*60);
+          p.vx *= damp;
+          p.vy *= damp;
+
+          // rotation
+          p.rot += p.rotSp * dt;
+
+          // glow decay
+          p.glow = Math.max(0, p.glow - dt * 0.9);
+        }
+
+        // collisions (bouncy + glow-up)
+        for (let i=0;i<lanterns.length;i++){
+          for (let j=i+1;j<lanterns.length;j++){
+            const a = lanterns[i], b = lanterns[j];
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const rr = a.r + b.r + 4;
+            const d2 = dx*dx + dy*dy;
+            if (d2 > 0 && d2 < rr*rr){
+              const d = Math.sqrt(d2);
+              const nx = dx / d;
+              const ny = dy / d;
+
+              // separate
+              const overlap = (rr - d);
+              a.x -= nx * overlap * 0.5;
+              a.y -= ny * overlap * 0.5;
+              b.x += nx * overlap * 0.5;
+              b.y += ny * overlap * 0.5;
+
+              // impulse
+              const relVx = b.vx - a.vx;
+              const relVy = b.vy - a.vy;
+              const relN = relVx*nx + relVy*ny;
+              if (relN < 0){
+                const impulse = (-relN) * 0.95;
+                a.vx -= impulse * nx;
+                a.vy -= impulse * ny;
+                b.vx += impulse * nx;
+                b.vy += impulse * ny;
+              }
+
+              a.glow = Math.max(a.glow, 1);
+              b.glow = Math.max(b.glow, 1);
+            }
+          }
+        }
+      }
+
       function drawLantern(p, tSec){
         const rr = p.r;
-        const glow = 0.18 + 0.82*p.glow;
+
+        // cozy orange palette
+        const ember  = { r: 255, g: 168, b:  78 };
+        const honey  = { r: 255, g: 205, b: 135 };
+        const cream  = { r: 255, g: 244, b: 220 };
+        const orange = { r: 255, g: 132, b:  44 };
+
+        const flicker = 0.82 + 0.18*Math.sin(p.flick);
+        const glowUp = 0.18 + 0.82*p.glow;
+        const glow = clamp(flicker * (0.55 + glowUp), 0.25, 1.25);
 
         // outer glow
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const halo = ctx.createRadialGradient(p.x, p.y, rr*0.2, p.x, p.y, rr*3.6);
-        halo.addColorStop(0.0, `rgba(255,220,160,${0.18*glow})`);
-        halo.addColorStop(0.55, `rgba(255,200,120,${0.07*glow})`);
+        const halo = ctx.createRadialGradient(p.x, p.y, rr*0.2, p.x, p.y, rr*4.4);
+        halo.addColorStop(0.0, `rgba(${honey.r},${honey.g},${honey.b},${0.18*glow})`);
+        halo.addColorStop(0.45, `rgba(${ember.r},${ember.g},${ember.b},${0.10*glow})`);
+        halo.addColorStop(0.80, `rgba(${orange.r},${orange.g},${orange.b},${0.05*glow})`);
         halo.addColorStop(1.0, 'rgba(0,0,0,0)');
         ctx.fillStyle = halo;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // lantern body (soft rounded diamond)
+        // lantern body
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
 
-        ctx.globalCompositeOperation = 'lighter';
-        const grad = ctx.createRadialGradient(0, -rr*0.12, rr*0.1, 0, 0, rr*1.35);
-        grad.addColorStop(0.0, `rgba(255,250,235,${0.92})`);
-        grad.addColorStop(0.28, `rgba(255,220,160,${0.52})`);
-        grad.addColorStop(0.62, `rgba(255,190,120,${0.22})`);
-        grad.addColorStop(1.0, 'rgba(0,0,0,0)');
-
-        ctx.fillStyle = grad;
-
-        ctx.beginPath();
-        ctx.moveTo(0, -rr*1.05);
-        ctx.quadraticCurveTo(rr*0.95, -rr*0.35, rr*0.75, 0);
-        ctx.quadraticCurveTo(rr*0.20, rr*0.95, 0, rr*1.08);
-        ctx.quadraticCurveTo(-rr*0.20, rr*0.95, -rr*0.75, 0);
-        ctx.quadraticCurveTo(-rr*0.95, -rr*0.35, 0, -rr*1.05);
-        ctx.closePath();
-        ctx.fill();
-
-        // inner “flame”
+        // soft shadow rim
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.55 + 0.35*Math.sin(tSec*2.2 + p.id);
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.filter = 'blur(0.4px)';
+        ctx.globalAlpha = 0.20;
+        ctx.filter = 'blur(0.6px)';
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
         ctx.beginPath();
-        ctx.ellipse(0, rr*0.12, rr*0.22, rr*0.48, 0.2*Math.sin(tSec+p.id), 0, Math.PI*2);
+        ctx.ellipse(0, rr*1.08, rr*0.55, rr*0.20, 0, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
 
-        // little top cap
+        // paper glow gradient
+        ctx.globalCompositeOperation = 'lighter';
+        const grad = ctx.createRadialGradient(0, -rr*0.15, rr*0.10, 0, 0, rr*1.55);
+        grad.addColorStop(0.0, `rgba(${cream.r},${cream.g},${cream.b},${0.96})`);
+        grad.addColorStop(0.22, `rgba(${honey.r},${honey.g},${honey.b},${0.70})`);
+        grad.addColorStop(0.55, `rgba(${ember.r},${ember.g},${ember.b},${0.36})`);
+        grad.addColorStop(0.86, `rgba(${orange.r},${orange.g},${orange.b},${0.16})`);
+        grad.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = grad;
+
+        // rounded lantern silhouette
+        ctx.beginPath();
+        ctx.moveTo(0, -rr*1.12);
+        ctx.quadraticCurveTo(rr*1.05, -rr*0.35, rr*0.78, 0);
+        ctx.quadraticCurveTo(rr*0.20, rr*0.98, 0, rr*1.10);
+        ctx.quadraticCurveTo(-rr*0.20, rr*0.98, -rr*0.78, 0);
+        ctx.quadraticCurveTo(-rr*1.05, -rr*0.35, 0, -rr*1.12);
+        ctx.closePath();
+        ctx.fill();
+
+        // “paper ribs” (adds quality)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.45;
-        ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        ctx.globalAlpha = 0.10 + 0.10*glowUp;
+        ctx.strokeStyle = `rgba(255,255,255,${0.18})`;
+        ctx.lineWidth = 1;
+        for (let k=-2;k<=2;k++){
+          const x = (k/2) * rr*0.35;
+          ctx.beginPath();
+          ctx.moveTo(x, -rr*0.92);
+          ctx.quadraticCurveTo(x*1.15, 0, x, rr*0.95);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // inner flame
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.45 + 0.35*Math.sin(tSec*2.2 + p.id);
+        ctx.fillStyle = `rgba(255,255,255,${0.9})`;
+        ctx.filter = 'blur(0.6px)';
         ctx.beginPath();
-        ctx.roundRect(-rr*0.35, -rr*1.22, rr*0.70, rr*0.26, rr*0.12);
+        ctx.ellipse(0, rr*0.15, rr*0.22, rr*0.55, 0.18*Math.sin(tSec+p.id), 0, Math.PI*2);
         ctx.fill();
+        ctx.restore();
+
+        // top cap + hook
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.35 + 0.20*glowUp;
+        ctx.fillStyle = `rgba(255,255,255,${0.65})`;
+        ctx.beginPath();
+        ctx.roundRect(-rr*0.36, -rr*1.28, rr*0.72, rr*0.26, rr*0.12);
+        ctx.fill();
+
+        ctx.strokeStyle = `rgba(255,255,255,${0.35})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, -rr*1.35, rr*0.22, Math.PI*0.05, Math.PI*0.95);
+        ctx.stroke();
         ctx.restore();
 
         ctx.restore();
@@ -1227,7 +1211,6 @@
           const t = clamp((nowMs - obj.t0) / obj.returnMs, 0, 1);
           const e = easeOutCubic(t);
           obj.scale = lerp(bloomScale, 1.0, e);
-
           const linger = 1 - 0.35 * e;
           obj.intensity = (1.25 * linger) + 0.05;
 
@@ -1238,14 +1221,38 @@
           return;
         }
 
+        // ✅ slower, cinematic warp: up -> hold -> (micro settle) -> transition
         if (obj.state === 'warpUp'){
-          const t = clamp((nowMs - obj.t0) / obj.warpMs, 0, 1);
+          const t = clamp((nowMs - obj.t0) / obj.warpUpMs, 0, 1);
           const e = easeInOutCubic(t);
           obj.scale = lerp(1.0, warpScale, e);
-          obj.intensity = 1.08 + 1.15 * easeOutCubic(t);
+          obj.intensity = 1.10 + 1.10 * easeOutCubic(t);
+          if (t >= 1){
+            obj.state = 'warpHold';
+            obj.t0 = nowMs;
+          }
+          return;
+        }
+
+        if (obj.state === 'warpHold'){
+          // linger at 5x
+          const t = clamp((nowMs - obj.t0) / obj.warpHoldMs, 0, 1);
+          obj.scale = warpScale * (1 + 0.02*Math.sin(nowMs*0.01)); // tiny breath
+          obj.intensity = 2.2;
+          if (t >= 1){
+            obj.state = 'warpDown';
+            obj.t0 = nowMs;
+          }
+          return;
+        }
+
+        if (obj.state === 'warpDown'){
+          const t = clamp((nowMs - obj.t0) / obj.warpDownMs, 0, 1);
+          const e = easeOutCubic(t);
+          obj.scale = lerp(warpScale, warpScale*0.92, e);
+          obj.intensity = lerp(2.2, 1.2, e);
 
           if (t >= 1){
-            // complete transition
             obj.state = 'idle';
             obj.scale = 1;
             obj.intensity = 1;
@@ -1255,7 +1262,23 @@
         }
       }
 
-      // ---------- Satellite swell ----------
+      // ---------- Satellite motion ----------
+      function updateSatellitePositions(dt){
+        for (const s of satellites){
+          if (s.dragging) continue;
+          s.angle += s.omega * dt;
+          s.x = star.cx + Math.cos(s.angle) * s.orbitRadius;
+          s.y = star.cy + Math.sin(s.angle) * s.orbitRadius;
+        }
+      }
+      function setSatelliteOrbitFromPosition(s){
+        const dx = s.x - star.cx;
+        const dy = s.y - star.cy;
+        const r = Math.sqrt(dx*dx + dy*dy);
+        s.orbitRadius = clamp(r, star.rBase * 0.85, Math.min(w,h) * 0.48);
+        s.angle = Math.atan2(dy, dx);
+      }
+
       function startSatelliteSwell(s, nowMs){
         s.state = 'swellUp';
         s.t0 = nowMs;
@@ -1284,27 +1307,9 @@
         }
       }
 
-      // ---------- Orbit + Drag (satellites) ----------
-      function updateSatellitePositions(dt){
-        for (const s of satellites){
-          if (s.dragging) continue;
-          s.angle += s.omega * dt;
-          s.x = star.cx + Math.cos(s.angle) * s.orbitRadius;
-          s.y = star.cy + Math.sin(s.angle) * s.orbitRadius;
-        }
-      }
-      function setSatelliteOrbitFromPosition(s){
-        const dx = s.x - star.cx;
-        const dy = s.y - star.cy;
-        const r = Math.sqrt(dx*dx + dy*dy);
-        s.orbitRadius = clamp(r, star.rBase * 0.85, Math.min(w,h) * 0.48);
-        s.angle = Math.atan2(dy, dx);
-      }
-
       // ---------- Hit tests ----------
       function inHitCircle(x,y,cx,cy,r){
-        const dx = x - cx;
-        const dy = y - cy;
+        const dx = x - cx, dy = y - cy;
         return (dx*dx + dy*dy) <= r*r;
       }
       function hitSatellite(x,y){
@@ -1318,22 +1323,13 @@
       function hitLantern(x,y){
         for (let i = lanterns.length - 1; i >= 0; i--){
           const p = lanterns[i];
-          if (inHitCircle(x,y,p.x,p.y,p.r*1.35)) return i;
+          if (inHitCircle(x,y,p.x,p.y,p.r*1.45)) return i;
         }
         return -1;
       }
 
-      // ---------- Interaction + double tap ----------
-      let allowInput = false;
-      let lastMs = performance.now();
-      let tapThrottleT = 0;
-
-      // per target double-tap tracking
-      const dbl = {
-        lastKey: '',
-        lastT: 0,
-        maxGap: 320
-      };
+      // ---------- Double tap ----------
+      const dbl = { lastKey:'', lastT:0, maxGap:360 };
       function isDoubleTap(key, now){
         if (dbl.lastKey === key && (now - dbl.lastT) <= dbl.maxGap){
           dbl.lastKey = '';
@@ -1345,8 +1341,40 @@
         return false;
       }
 
+      // ---------- Drag ----------
       const drag = { active:false, satIndex:-1, pointerId:null };
 
+      // ---------- Scene navigation ----------
+      function goToScene(next){
+        scene = next;
+        updateBackButton();
+
+        messagePlaying = false;
+        clearMessageTimers();
+        hideMessage();
+
+        dbl.lastKey = '';
+        dbl.lastT = 0;
+
+        moon.glow = 0;
+        for (const p of lanterns) p.glow = 0;
+
+        if (scene === 'planet'){
+          showOneShot("Welcome to Boo Planet.\nTap the moon for moon facts.\nDouble tap Boo Planet to visit the Lantern Sky.", 7000);
+        } else if (scene === 'lantern'){
+          showOneShot("Lantern Sky.\nTap a lantern to discover a world holiday.", 5600);
+        } else if (scene === 'star'){
+          showOneShot("Tip: Double tap the star to travel to Boo Planet.", 5200);
+        }
+      }
+
+      backBtn.addEventListener('click', () => {
+        if (!allowInput) return;
+        if (scene === 'lantern') goToScene('planet');
+        else if (scene === 'planet') goToScene('star');
+      });
+
+      // ---------- Input ----------
       canvas.addEventListener('pointerdown', (e) => {
         if (!allowInput) return;
 
@@ -1355,52 +1383,41 @@
         const y = (e.clientY - rect.top);
         const now = performance.now();
 
-        // --------- LANTERN SCENE ----------
         if (scene === 'lantern'){
           const li = hitLantern(x,y);
           if (li !== -1){
             const p = lanterns[li];
             p.glow = 1;
 
-            // nudge on click
-            p.vx += rand(-120,120);
-            p.vy += rand(-90,90);
+            // cozy nudge (still autonomous after)
+            p.vx += rand(-140,140);
+            p.vy += rand(-110,110);
 
-            // show next holiday message
             const idx = holidayOrder[holidayPtr % holidayOrder.length];
             holidayPtr++;
-            showOneShot(HOLIDAY_MESSAGES[idx], 6400);
-            return;
+            showOneShot(HOLIDAY_MESSAGES[idx], 6800);
           }
-
-          // double tap Boo Planet (big) to… (spec says double tap Boo Planet in planet scene)
-          // keep no-op here (planet is background centerpiece).
           return;
         }
 
-        // --------- PLANET SCENE ----------
         if (scene === 'planet'){
-          // tap moon -> facts
+          // tap moon
           if (inHitCircle(x,y,moon.x,moon.y,moon.rBase*1.6)){
             moon.glow = 1;
             const fact = MOON_FACTS[moonFactIndex % MOON_FACTS.length];
             moonFactIndex++;
-            showOneShot(fact, 5200);
+            showOneShot(fact, 5600);
             return;
           }
 
-          // double tap Boo Planet -> warp to lantern scene
+          // Boo Planet tap / double tap
           const planetR = booPlanet.rBase * 1.25;
           if (inHitCircle(x,y,booPlanet.cx,booPlanet.cy,planetR)){
             const key = 'planet:boo';
             if (isDoubleTap(key, now)){
               startWarp(booPlanet, now);
-              // warp complete -> lantern scene
-              booPlanet.state = 'warpUp';
-              booPlanet.t0 = now;
               return;
             } else {
-              // optional single tap: gentle bloom
               if (booPlanet.state === 'idle') startBloom(booPlanet, now);
               return;
             }
@@ -1408,43 +1425,33 @@
           return;
         }
 
-        // --------- STAR SCENE ----------
-        if (scene === 'star'){
-          const idx = hitSatellite(x,y);
-          if (idx !== -1){
-            const s = satellites[idx];
-            startSatelliteSwell(s, now);
-            playUniverseMessage();
+        // scene === 'star'
+        const idx = hitSatellite(x,y);
+        if (idx !== -1){
+          const s = satellites[idx];
+          startSatelliteSwell(s, now);
 
-            // Dragging
-            drag.active = true;
-            drag.satIndex = idx;
-            drag.pointerId = e.pointerId;
-            s.dragging = true;
+          // drag
+          drag.active = true;
+          drag.satIndex = idx;
+          drag.pointerId = e.pointerId;
+          s.dragging = true;
+          s.x = x; s.y = y;
+          canvas.setPointerCapture?.(e.pointerId);
+          return;
+        }
 
-            s.x = x; s.y = y;
-            canvas.setPointerCapture?.(e.pointerId);
+        // star tap / double tap
+        const starR = star.rBase * 1.22;
+        if (inHitCircle(x,y,star.cx,star.cy,starR)){
+          const key = 'star:center';
+          if (isDoubleTap(key, now)){
+            startWarp(star, now);
             return;
-          }
-
-          const starR = star.rBase * 1.22;
-          if (inHitCircle(x,y,star.cx,star.cy,starR)){
-            const key = 'star:center';
-            if (isDoubleTap(key, now)){
-              // DOUBLE TAP: swell 5x then enter Boo Planet scene
-              startWarp(star, now);
-              star.state = 'warpUp';
-              star.t0 = now;
-              return;
-            } else {
-              // single tap: glow / palette
-              if (star.state === 'idle') startBloom(star, now);
-              if (now - tapThrottleT > 500) {
-                tapThrottleT = now;
-                pickNewPalette(now);
-              }
-              return;
-            }
+          } else {
+            if (star.state === 'idle') startBloom(star, now);
+            pickNewPalette(now);
+            return;
           }
         }
       }, { passive:false });
@@ -1483,38 +1490,6 @@
       canvas.addEventListener('pointerup', endDrag, { passive:true });
       canvas.addEventListener('pointercancel', endDrag, { passive:true });
 
-      // ---------- Back button ----------
-      function goToScene(next){
-        scene = next;
-        updateBackButton();
-
-        // clean up messages on scene change
-        messagePlaying = false;
-        clearMessageTimers();
-        hideMessage();
-
-        // reset double tap tracking
-        dbl.lastKey = '';
-        dbl.lastT = 0;
-
-        // reset a few glows
-        moon.glow = 0;
-        for (const p of lanterns) p.glow = 0;
-
-        // small hint
-        if (scene === 'planet'){
-          showOneShot("Welcome to Boo Planet.\nTap the moon for moon facts.\nDouble tap Boo Planet to visit the Lantern Sky.", 6200);
-        } else if (scene === 'lantern'){
-          showOneShot("Lantern Sky.\nTap a lantern to learn about world holidays.", 5200);
-        }
-      }
-
-      backBtn.addEventListener('click', () => {
-        if (!allowInput) return;
-        if (scene === 'lantern') goToScene('planet');
-        else if (scene === 'planet') goToScene('star');
-      });
-
       // ---------- Welcome / Start ----------
       async function startMusic(){
         try{
@@ -1541,19 +1516,9 @@
         showOneShot("Tip: Double tap the star to travel to Boo Planet.", 5200);
       });
 
-      // ---------- Scene transitions triggered by warps ----------
-      function handleWarpTransitions(nowMs){
-        // star warp complete -> planet scene
-        if (scene === 'star' && star.state === 'warpUp'){
-          // the updateCelestial will call completion; we do it there via hook
-        }
-        // planet warp complete -> lantern scene
-        if (scene === 'planet' && booPlanet.state === 'warpUp'){
-          // handled via hook too
-        }
-      }
+      // ---------- Animation loop ----------
+      let lastMs = performance.now();
 
-      // ---------- Main animation loop ----------
       function tick(nowMs){
         const dt = (nowMs - lastMs) * 0.001;
         lastMs = nowMs;
@@ -1562,84 +1527,61 @@
         updatePalette(nowMs);
         drawBackground(tSec);
 
-        // rotate always
+        // rotations
         star.rot  += dt * 0.18;  star.rot2 += dt * 0.11;
         booPlanet.rot  += dt * 0.16; booPlanet.rot2 += dt * 0.10;
         booPlanetBig.rot += dt * 0.14; booPlanetBig.rot2 += dt * 0.09;
 
-        // ---- STAR SCENE ----
         if (scene === 'star'){
           updateCelestial(star, nowMs, {
             bloomScale: 3.0,
             warpScale: 5.0,
-            onWarpComplete: () => {
-              // enter Boo Planet
-              goToScene('planet');
-            }
+            onWarpComplete: () => goToScene('planet')
           });
 
           updateSatellitePositions(dt);
           for (const s of satellites) updateSatelliteSwell(s, nowMs);
 
-          // satellites behind star
           for (const s of satellites) drawSatellite(s);
-
-          // star
-          drawCelestial(star, tSec, nowMs);
+          drawCelestial(star, tSec);
         }
 
-        // ---- PLANET SCENE ----
         if (scene === 'planet'){
           updateCelestial(booPlanet, nowMs, {
             bloomScale: 2.4,
             warpScale: 5.0,
-            onWarpComplete: () => {
-              // enter Lantern Sky
-              goToScene('lantern');
-            }
+            onWarpComplete: () => goToScene('lantern')
           });
 
-          updateMoon(dt, nowMs);
+          updateMoon(dt);
 
-          // Boo Planet
-          drawCelestial(booPlanet, tSec, nowMs);
-
-          // Moon in front
+          drawCelestial(booPlanet, tSec);
           drawMoon(tSec);
         }
 
-        // ---- LANTERN SCENE ----
         if (scene === 'lantern'){
-          // big Boo Planet (idle breathing only)
           updateCelestialIdle(booPlanetBig, nowMs);
           booPlanetBig.intensity = 1.12;
 
-          // physics lanterns
-          collideLanterns(dt);
+          // ✅ improved lantern motion (autonomous float + orbit)
+          updateLanterns(dt);
 
-          // draw planet first
-          drawCelestial(booPlanetBig, tSec, nowMs);
-
-          // draw lanterns
+          drawCelestial(booPlanetBig, tSec);
           for (const p of lanterns) drawLantern(p, tSec);
         }
 
         updateBackButton();
-        handleWarpTransitions(nowMs);
-
         requestAnimationFrame(tick);
       }
 
       // ---------- Safety ----------
       document.addEventListener('visibilitychange', () => {
         if (document.hidden){
-          // reset objects
           for (const obj of [star, booPlanet, booPlanetBig]){
             obj.state = 'idle';
             obj.scale = 1;
             obj.intensity = 1;
           }
-
           for (const s of satellites){
             s.state = 'idle';
             s.scale = 1;
@@ -1656,16 +1598,15 @@
         }
       });
 
-      // ---------- Init ----------
+      // ---------- Start ----------
       resize();
-      computeLayout();
-      initSatellites();
-      initLanterns();
-      requestAnimationFrame(tick);
+      initSatellites(true);
+      initLanterns(true);
 
-      // set initial moon angle (pretty)
       moon.angle = rand(0, Math.PI*2);
       moonFactIndex = 0;
+
+      requestAnimationFrame(tick);
     })();
   </script>
 </body>
