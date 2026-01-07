@@ -2069,274 +2069,139 @@
         if (!allowInput) return;
 
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left);
-        const y = (e.clientY - rect.top);
-        const now = performance.now();
+        const x = (dir > 0) ? -w*0.15 : w*1.15;
 
-        if (scene === SCENES.LANTERN){
-          const li = hitLantern(x,y);
-          if (li !== -1){
-            const p = lanterns[li];
-            p.vividIndex = (p.vividIndex + 1) % SKY_LANTERN_COLORS.length;
-            p.glow = 1;
-            const kick = lerp(34, 18, p.z);
-            p.vx += rand(-kick, kick);
-            p.vy += rand(-kick*0.85, kick*0.85);
-          }
-          return;
-        }
+        const hue = rand(185, 210);
+        const tint = hsvToRgb(hue, 0.20, 1.0);
 
-        if (scene === SCENES.LUNAR){
-          if (hitLunarMoon(x,y)) lunar.glow = 1;
-          return;
-        }
-
-        if (scene === SCENES.GRAVITY){
-          const si = hitGravitySat(x,y);
-          if (si !== -1){
-            const s = gravity.sats[si];
-            gravity.drag.active = true;
-            gravity.drag.satIndex = si;
-            gravity.drag.pointerId = e.pointerId;
-            s.dragging = true;
-            s.glow = 1;
-            s.x = x; s.y = y;
-            canvas.setPointerCapture?.(e.pointerId);
-          }
-          return;
-        }
-
-        if (scene !== SCENES.STAR){
-          return;
-        }
-
-        const idx = hitSatellite(x,y);
-        if (idx !== -1){
-          const s = satellites[idx];
-
-          const key = `sat:${s.id}`;
-          if (isDoubleTap(key, now)){
-            const target = SAT_TO_SCENE[s.id] ?? SCENES.LANTERN;
-            pickNewPalette(now);
-            startSceneTransition(target, now);
-            return;
-          }
-
-          startSatelliteSwell(s, now);
-          drag.active = true;
-          drag.satIndex = idx;
-          drag.pointerId = e.pointerId;
-          s.dragging = true;
-          s.x = x; s.y = y;
-          canvas.setPointerCapture?.(e.pointerId);
-          return;
-        }
-
-        const starR = star.rBase * reminderScale(1.22);
-        if (inHitCircle(x,y,star.cx,star.cy,starR)){
-          if (star.state === 'idle') startBloom(star, now);
-          pickNewPalette(now);
-        }
-      }, { passive:false });
-
-      function reminderScale(v){ return v; } // tiny helper to keep diff minimal
-
-      canvas.addEventListener('pointermove', (e) => {
-        if (!allowInput) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left);
-        const y = (e.clientY - rect.top);
-
-        if (scene === SCENES.STAR){
-          if (!drag.active) return;
-          if (drag.pointerId !== e.pointerId) return;
-          const s = satellites[drag.satIndex];
-          if (!s) return;
-          s.x = x;
-          s.y = y;
-          return;
-        }
-
-        if (scene === SCENES.GRAVITY){
-          if (!gravity.drag.active) return;
-          if (gravity.drag.pointerId !== e.pointerId) return;
-          const s = gravity.sats[gravity.drag.satIndex];
-          if (!s) return;
-          s.x = x;
-          s.y = y;
-        }
-      }, { passive:false });
-
-      function endDrag(e){
-        if (scene === SCENES.STAR){
-          if (drag.active && drag.pointerId === e.pointerId){
-            const s = satellites[drag.satIndex];
-            if (s){
-              s.dragging = false;
-              setSatelliteOrbitFromPosition(s);
-            }
-            drag.active = false;
-            drag.satIndex = -1;
-            drag.pointerId = null;
-          }
-        }
-
-        if (scene === SCENES.GRAVITY){
-          if (gravity.drag.active && gravity.drag.pointerId === e.pointerId){
-            const s = gravity.sats[gravity.drag.satIndex];
-            if (s){
-              s.dragging = false;
-
-              let best = 0;
-              let bestD2 = Infinity;
-              for (let i=0;i<gravity.bodies.length;i++){
-                const b = gravity.bodies[i];
-                const dx = s.x - b.x;
-                const dy = s.y - b.y;
-                const d2 = dx*dx + dy*dy;
-                if (d2 < bestD2){ bestD2 = d2; best = i; }
-              }
-              const b = gravity.bodies[best];
-              s.bodyIndex = best;
-
-              const dx = s.x - b.x;
-              const dy = s.y - b.y;
-              const rr = Math.sqrt(dx*dx + dy*dy);
-              s.orbitRadius = clamp(rr, b.r * 1.25, Math.min(w,h) * 0.48);
-              s.angle = Math.atan2(dy, dx);
-              s.omega = clamp(s.omega + rand(-0.06, 0.06), -0.85, 0.85);
-            }
-
-            gravity.drag.active = false;
-            gravity.drag.satIndex = -1;
-            gravity.drag.pointerId = null;
-          }
-        }
-      }
-      canvas.addEventListener('pointerup', endDrag, { passive:true });
-      canvas.addEventListener('pointercancel', endDrag, { passive:true });
-
-      // ---------- Welcome / Start ----------
-      async function startMusic(){
-        try{
-          if (bgm && bgm.paused){
-            bgm.volume = 0.45;
-            await bgm.play();
-          }
-        }catch(_e){}
+        arr.push({
+          x, y,
+          vx: speed,
+          s,
+          a: rand(0.10, 0.22),
+          t0: nowMs,
+          wob: rand(0, Math.PI*2),
+          tint
+        });
       }
 
-      function setScreen(which){
-        welcome.classList.toggle('active', which === 'welcome');
-        play.classList.toggle('active', which === 'play');
+      function updateAndDrawClouds(arr, dt, tSec, nowMs, dir){
+        if (Math.random() < dt * 0.12){
+          spawnCloud(arr, dir, nowMs);
+        }
+
+        for (let i=arr.length-1; i>=0; i--){
+          const c = arr[i];
+          c.wob += dt * 0.35;
+          c.x += c.vx * dt;
+          c.y += Math.sin(c.wob) * 0.25;
+
+          const off = (dir > 0) ? (c.x > w*1.25) : (c.x < -w*0.25);
+          if (off){
+            arr.splice(i,1);
+            continue;
+          }
+
+          const s = c.s;
+          const w0 = 220 * s;
+          const h0 = 85 * s;
+
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = c.a;
+          ctx.filter = 'blur(14px)';
+
+          const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, w0*0.85);
+          g.addColorStop(0.0, `rgba(${c.tint.r|0},${c.tint.g|0},${c.tint.b|0},0.40)`);
+          g.addColorStop(0.55, `rgba(255,255,255,0.18)`);
+          g.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(c.x-w0, c.y-h0, w0*2, h0*2);
+
+          ctx.filter = 'none';
+          ctx.restore();
+        }
       }
 
-      startBtn.addEventListener('click', async () => {
-        await startMusic();
-        setScreen('play');
-        pressToPlay.style.display = 'block';
-        allowInput = true;
-        goToScene(SCENES.STAR, performance.now());
-      });
+      /* =========================
+         COMETS
+      ========================= */
 
-      // ---------- Animation loop ----------
-      let lastMs = performance.now();
+      function spawnComet(arr){
+        const startSide = Math.random() < 0.5 ? 'left' : 'right';
+        const x = (startSide === 'left') ? -w*0.10 : w*1.10;
+        const y = rand(h*0.05, h*0.42);
+        const dir = (startSide === 'left') ? 1 : -1;
 
-      function tick(nowMs){
-        const dt = (nowMs - lastMs) * 0.001;
-        lastMs = nowMs;
-        const tSec = nowMs * 0.001;
-
-        updatePalette(nowMs);
-
-        // Base background (kept for all scenes; Ocean overlays its own underwater wash)
-        drawBackground(tSec);
-
-        star.rot  += dt * 0.18;
-        star.rot2 += dt * 0.11;
-
-        if (scene === SCENES.STAR){
-          if (!transition.active){
-            updateCelestial(star, nowMs, { bloomScale: 3.0 });
-          }
-
-          updateSatellitePositions(dt);
-          for (const s of satellites) updateSatelliteSwell(s, nowMs);
-
-          for (const s of satellites) drawSatellite(s);
-          drawCelestial(star, tSec);
-        }
-
-        if (scene === SCENES.LANTERN){
-          drawLanternSkyOverlays();
-          updateLanterns(dt, tSec);
-          lanterns.sort((a,b)=> b.z - a.z);
-          for (const p of lanterns) drawLantern(p, tSec);
-        }
-
-        if (scene === SCENES.LUNAR){
-          updateAndDrawLunar(dt, tSec, nowMs);
-        }
-
-        if (scene === SCENES.SUN){
-          updateAndDrawSunSphere(dt, tSec, nowMs);
-        }
-
-        if (scene === SCENES.OCEAN){
-          updateAndDrawOcean(dt, tSec, nowMs);
-        }
-
-        if (scene === SCENES.GRAVITY){
-          updateAndDrawGravity(dt, tSec, nowMs);
-        }
-
-        if (transition.active === true){
-          updateTransition(nowMs);
-          drawFadeOverlay(transition.alpha);
-        } else if (transition.active === 'fadeIn'){
-          updateFadeIn(nowMs);
-          drawFadeOverlay(transition.alpha);
-        }
-
-        updateBackButton();
-        requestAnimationFrame(tick);
+        arr.push({
+          x, y,
+          vx: rand(320, 520) * dir,
+          vy: rand(40, 120),
+          life: rand(0.55, 0.85),
+          age: 0,
+          r: rand(2.8, 4.8),
+          hue: rand(185, 210)
+        });
       }
 
-      // ---------- Safety ----------
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden){
-          star.state = 'idle';
-          star.scale = 1;
-          star.intensity = 1;
-
-          for (const s of satellites){
-            s.state = 'idle';
-            s.scale = 1;
-            s.dragging = false;
-            setSatelliteOrbitFromPosition(s);
-          }
-          drag.active = false;
-          drag.satIndex = -1;
-          drag.pointerId = null;
-
-          if (gravity.sats.length){
-            for (const s of gravity.sats) s.dragging = false;
-            gravity.drag.active = false;
-            gravity.drag.satIndex = -1;
-            gravity.drag.pointerId = null;
-          }
-
-          transition.active = false;
-          transition.alpha = 0;
-
-          messagePlaying = false;
-          clearMessageTimers();
-          hideMessage();
+      function updateAndDrawComets(arr, dt){
+        if (Math.random() < dt * 0.22){
+          spawnComet(arr);
         }
-      });
 
-      // ---------- Start ----------
+        for (let i=arr.length-1; i>=0; i--){
+          const c = arr[i];
+          c.age += dt;
+          c.x += c.vx * dt;
+          c.y += c.vy * dt;
+
+          const t = clamp(c.age / c.life, 0, 1);
+          if (t >= 1){
+            arr.splice(i,1);
+            continue;
+          }
+
+          const col = hsvToRgb(c.hue, 0.25, 1.0);
+          const a = (1 - t) * 0.55;
+
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = a;
+          ctx.filter = 'blur(2.5px)';
+
+          const tailLen = 180;
+          const tx = c.x - (c.vx>0 ? 1 : -1) * tailLen;
+          const ty = c.y - tailLen*0.22;
+
+          const g = ctx.createLinearGradient(c.x, c.y, tx, ty);
+          g.addColorStop(0.0, `rgba(255,255,255,0.30)`);
+          g.addColorStop(0.35, `rgba(${col.r|0},${col.g|0},${col.b|0},0.22)`);
+          g.addColorStop(1.0, 'rgba(0,0,0,0)');
+
+          ctx.strokeStyle = g;
+          ctx.lineWidth = 5.0;
+          ctx.beginPath();
+          ctx.moveTo(c.x, c.y);
+          ctx.lineTo(tx, ty);
+          ctx.stroke();
+
+          ctx.restore();
+
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = a;
+          ctx.fillStyle = 'rgba(255,255,255,0.75)';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      /* =========================
+         MAIN LOOP CONTINUATION
+      ========================= */
+
       resize();
       initSatellites(true);
       initLanterns(true);
