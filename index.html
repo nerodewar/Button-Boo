@@ -612,20 +612,20 @@
       function bias01(power=2.0){ return Math.pow(Math.random(), power); }
 
       // ---------- Moon Scene ----------
-      const lunar = { x:0, y:0, r:120, speed:18, glow:0 };
+      // (tweak) a bit faster
+      const lunar = { x:0, y:0, r:120, speed:26, glow:0 };
       const lunarComets = [];
-      const lunarClouds = [];
+      const lunarClouds = []; // kept but unused (clouds removed per request)
 
-      // ---------- Sun Scene (loop: rise 12s -> night moon traverse 8s -> rise 12s, with clouds) ----------
+      // ---------- Sun Scene (smooth loop: sunrise -> sunset -> moon traverse -> repeat) ----------
       const sunScene = {
         sunR: 130,
-        clouds: [],
-        t: 0,             // seconds since entered
-        // phases:
-        // A: rise 12 (0..12)
-        // B: moon traverse 8 (12..20) sun down
-        // C: rise 12 (20..32)
-        cycle: 32
+        clouds: [],  // kept but unused (clouds removed per request)
+        t: 0,        // seconds since entered
+        cycle: 32,   // 0..12 sunrise, 12..22 sunset, 22..32 moon traverse
+        sunriseDur: 12,
+        sunsetDur: 10,
+        moonDur: 10
       };
       const sunMoon = { x:0, y:0, r:100, glow:0 };
 
@@ -821,14 +821,14 @@
 
       function resetSunScene(nowMs){
         sunScene.t = 0;
-        sunScene.clouds.length = 0;
+        sunScene.clouds.length = 0; // clouds removed
         sunMoon.x = w + sunMoon.r*1.2;
         sunMoon.glow = 0;
       }
 
       function resetLunarScene(nowMs){
         lunarComets.length = 0;
-        lunarClouds.length = 0;
+        lunarClouds.length = 0; // clouds removed
       }
 
       // ---------- Drawing helpers (celestial) ----------
@@ -1615,66 +1615,6 @@
         ctx.restore();
       }
 
-      // ---------- Clouds (soft blobs) ----------
-      function spawnCloud(arr, dir, nowMs, yMin=0.10, yMax=0.45){
-        const y = rand(h*yMin, h*yMax);
-        const s = rand(0.65, 1.35);
-        const speed = rand(10, 26) * dir;
-        const x = (dir > 0) ? -w*0.15 : w*1.15;
-
-        const hue = rand(185, 210);
-        const tint = hsvToRgb(hue, 0.20, 1.0);
-
-        arr.push({
-          x, y,
-          vx: speed,
-          s,
-          a: rand(0.10, 0.22),
-          t0: nowMs,
-          wob: rand(0, Math.PI*2),
-          tint
-        });
-      }
-
-      function updateAndDrawClouds(arr, dt, tSec, nowMs, dir){
-        // spawn sometimes
-        if (Math.random() < dt * 0.12){
-          spawnCloud(arr, dir, nowMs);
-        }
-
-        for (let i=arr.length-1; i>=0; i--){
-          const c = arr[i];
-          c.wob += dt * 0.35;
-          c.x += c.vx * dt;
-          c.y += Math.sin(c.wob) * 0.25;
-
-          const off = (dir > 0) ? (c.x > w*1.25) : (c.x < -w*0.25);
-          if (off){
-            arr.splice(i,1);
-            continue;
-          }
-
-          const s = c.s;
-          const w0 = 220 * s;
-          const h0 = 85 * s;
-
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.globalAlpha = c.a;
-          ctx.filter = 'blur(14px)';
-
-          const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, w0*0.85);
-          g.addColorStop(0.0, `rgba(${c.tint.r|0},${c.tint.g|0},${c.tint.b|0},0.40)`);
-          g.addColorStop(0.55, `rgba(255,255,255,0.18)`);
-          g.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = g;
-          ctx.fillRect(c.x-w0, c.y-h0, w0*2, h0*2);
-
-          ctx.filter = 'none';
-          ctx.restore();
-        }
-      }
-
       // ---------- Comets ----------
       function spawnComet(arr){
         const startSide = Math.random() < 0.5 ? 'left' : 'right';
@@ -1764,17 +1704,16 @@
 
       // ---------- Lunar scene ----------
       function updateAndDrawLunar(dt, tSec, nowMs){
-        // big moon gliding (left->right like before)
+        // (tweak) big moon gliding faster (left->right)
         lunar.x += lunar.speed * dt;
         if (lunar.x > w + lunar.r*1.25) lunar.x = -lunar.r*1.25;
 
         lunar.glow = Math.max(0, lunar.glow - dt * 1.1);
 
-        // Comets across the sky
+        // Comets across the sky (kept)
         updateAndDrawComets(lunarComets, dt);
 
-        // Clouds sometimes drift right->left
-        updateAndDrawClouds(lunarClouds, dt, tSec, nowMs, -1);
+        // (change) clouds removed from lunar scene
 
         const rr = lunar.r;
         const glow = 0.18 + 0.75*lunar.glow;
@@ -1815,7 +1754,7 @@
         ctx.restore();
       }
 
-      // ---------- Sun scene (loop) ----------
+      // ---------- Sun scene (smooth sunrise/sunset + moon) ----------
       function drawSunSkyForPhase(p){
         // p 0..1 for dayness
         const topFrom = { r: 18, g: 8,  b: 20 };
@@ -1895,59 +1834,74 @@
       }
 
       function updateAndDrawSunScene(dt, tSec, nowMs){
+        // (change) remove clouds from sun sphere scene
+
         sunScene.t += dt;
         if (sunScene.t > sunScene.cycle) sunScene.t -= sunScene.cycle;
 
         const t = sunScene.t;
 
-        // Clouds drift left->right sometimes (across both day & night phases)
-        updateAndDrawClouds(sunScene.clouds, dt, tSec, nowMs, +1);
+        // Phases:
+        // 0..sunriseDur : sunrise (dayness 0->1), sun rises
+        // sunriseDur..sunriseDur+sunsetDur : sunset (dayness 1->0), sun sets
+        // ...then moonDur: moon traverse, night
+        const A = sunScene.sunriseDur;           // 12
+        const B = sunScene.sunriseDur + sunScene.sunsetDur; // 22
+        const C = sunScene.cycle;                // 32
+        const moonStart = B;
+        const moonEnd = C;
 
-        // Decide phase
-        // A: 0..12 sun rising
-        // B: 12..20 night, moon right->left traverse (8s)
-        // C: 20..32 sun rising again
         let dayness = 0;
-        let sunY = h + sunScene.sunR*1.15;
+        let sunY = h + sunScene.sunR*1.20;
 
-        if (t < 12){
-          const p = easeInOutCubic(clamp(t/12,0,1));
+        if (t < A){
+          // sunrise
+          const p = easeInOutCubic(clamp(t / A, 0, 1));
           dayness = p;
-          sunY = lerp(h + sunScene.sunR*1.15, h*0.42, p);
-        } else if (t < 20){
-          // night
-          dayness = 0.0;
-          sunY = h + sunScene.sunR*1.20; // dipped
+          sunY = lerp(h + sunScene.sunR*1.20, h*0.42, p);
+        } else if (t < B){
+          // sunset
+          const p = easeInOutCubic(clamp((t - A) / (B - A), 0, 1));
+          dayness = 1 - p;
+          sunY = lerp(h*0.42, h + sunScene.sunR*1.25, p);
         } else {
-          const p = easeInOutCubic(clamp((t-20)/12,0,1));
-          dayness = p;
-          sunY = lerp(h + sunScene.sunR*1.15, h*0.42, p);
+          // night (moon phase)
+          dayness = 0.0;
+          sunY = h + sunScene.sunR*1.25;
         }
 
         drawSunSkyForPhase(dayness);
 
-        // add some stars during night
-        if (dayness < 0.25){
+        // stars during night
+        if (dayness < 0.30){
           ctx.save();
-          ctx.globalAlpha = (0.35 - dayness) * 1.2;
+          ctx.globalAlpha = (0.40 - dayness) * 1.2;
           drawStarLayer(starsFar,  tSec, 0, 0);
           drawStarLayer(starsMid,  tSec, 0, 0);
           drawStarLayer(starsNear, tSec, 0, 0);
           ctx.restore();
         }
 
-        // draw sun when above-ish
-        if (dayness > 0.10){
+        // draw sun when somewhat visible
+        if (dayness > 0.06){
           drawSunSphere(w*0.5, sunY, sunScene.sunR);
         }
 
-        // moon traverse during night window 12..20, right->left over 8s
-        if (t >= 12 && t < 20){
-          const p = clamp((t-12)/8, 0, 1);
+        // moon traverse during night window (moonStart..moonEnd)
+        if (t >= moonStart && t < moonEnd){
+          const p = clamp((t - moonStart) / (moonEnd - moonStart), 0, 1);
           const e = easeInOutCubic(p);
+          // right -> left
           sunMoon.x = lerp(w + sunMoon.r*1.2, -sunMoon.r*1.2, e);
-          sunMoon.glow = 0.25 + 0.25*Math.sin(tSec*0.6);
+          sunMoon.glow = 0.22 + 0.18*Math.sin(tSec*0.6);
+
+          // small "moon comes out" feeling: fade in/out based on traversal
+          const moonVis = easeInOutCubic(clamp(p * 1.25, 0, 1)) * (1 - easeInOutCubic(clamp((p - 0.80) / 0.20, 0, 1)));
+          const saved = ctx.globalAlpha;
+          ctx.save();
+          ctx.globalAlpha = clamp(moonVis, 0, 1);
           drawSunMoon(sunMoon.x, sunMoon.y, sunMoon.r, sunMoon.glow);
+          ctx.restore();
         }
       }
 
@@ -2092,8 +2046,10 @@
         }
 
         if (scene === SCENES.SUN){
-          // optional: tap moon (if in night phase and visible) -> glow
-          if (sunScene.t >= 12 && sunScene.t < 20){
+          // tap moon (if in night phase and visible) -> glow
+          const A = sunScene.sunriseDur;
+          const B = sunScene.sunriseDur + sunScene.sunsetDur;
+          if (sunScene.t >= B){
             if (inHitCircle(x,y,sunMoon.x,sunMoon.y,sunMoon.r*1.2)){
               sunMoon.glow = 1;
             }
