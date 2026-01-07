@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Boo Planet (v1.7.1)</title>
+  <title>Boo Planet (v1.7.2)</title>
 
   <!-- Retro arcade font (online). If you want offline, download and self-host. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -60,13 +60,13 @@
 
     .panel{
       width:min(760px, 100%);
-      border-radius: var(--radius);
+      border-radius: 22px;
       background:
         radial-gradient(900px 420px at 20% 12%, rgba(255,255,255,0.08), rgba(0,0,0,0) 55%),
         linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
-        var(--glass);
+        rgba(10, 24, 58, 0.38);
       border:1px solid rgba(255,255,255,0.12);
-      box-shadow: var(--shadow);
+      box-shadow: 0 24px 70px rgba(0,0,0,.55);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
       overflow:hidden;
@@ -98,7 +98,7 @@
       max-width: 58ch;
       margin: 0 auto;
       text-align:center;
-      color: var(--muted);
+      color: rgba(214,230,255,0.80);
       line-height: 1.65;
       font-size: 1rem;
     }
@@ -129,7 +129,7 @@
       background:
         radial-gradient(220px 100px at 20% 0%, rgba(255,255,255,0.20), rgba(0,0,0,0) 70%),
         linear-gradient(180deg, rgba(255,255,255,0.10), rgba(0,0,0,0) 42%),
-        linear-gradient(180deg, var(--arcadeBlue1), var(--arcadeBlue2));
+        linear-gradient(180deg, #2aa8ff, #0a4ee6);
       color: rgba(244,248,255,0.98);
       text-shadow: 0 0 16px rgba(255,255,255,0.18);
       box-shadow:
@@ -141,13 +141,6 @@
       -webkit-tap-highlight-color: transparent;
     }
     .startBtn:active{ transform: translateY(2px) scale(0.99); filter: brightness(0.98); }
-
-    .hint{
-      margin-top: 2px;
-      font-size: 0.92rem;
-      color: rgba(214,230,255,0.70);
-      text-align:center;
-    }
 
     .pressToPlay{
       position:fixed;
@@ -181,14 +174,13 @@
       pointer-events:none;
       z-index: 50;
     }
-
     .messageCard{
       width: min(860px, 100%);
       border-radius: 18px;
       background:
         radial-gradient(900px 420px at 30% 20%, rgba(255,255,255,0.08), rgba(0,0,0,0) 60%),
         linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
-        var(--glass2);
+        rgba(10, 24, 58, 0.26);
       border: 1px solid rgba(255,255,255,0.12);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
@@ -201,12 +193,10 @@
       pointer-events: none;
       transition: none;
     }
-
     .messageCard.isVisible{
       opacity: 0 !important;
       transform: none;
     }
-
     .messageText{
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       font-size: clamp(14px, 1.9vw, 16px);
@@ -293,7 +283,6 @@
         <div class="copy">
           <p><strong style="color:rgba(244,248,255,0.95);">This is a sensory cause-and-effect playground.</strong></p>
           <p>A first interaction with screens and a gentle way for your little ones to develop:</p>
-          <p></p>
           <ul>
             <li><strong>Cause &amp; effect understanding</strong></li>
             <li><strong>Finer motor control</strong></li>
@@ -301,7 +290,6 @@
         </div>
 
         <button class="startBtn" id="startBtn" type="button" aria-label="Start Boo Planet">START</button>
-        <div class="hint"></div>
       </div>
     </div>
 
@@ -321,6 +309,22 @@
       const easeInOutCubic = t => (t < 0.5) ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
       const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
       const rand = (a,b)=> lerp(a,b,Math.random());
+
+      function hsvToRgb(h, s, v){
+        h = ((h % 360) + 360) % 360;
+        s = clamp(s,0,1); v = clamp(v,0,1);
+        const c = v*s;
+        const x = c * (1 - Math.abs(((h/60)%2) - 1));
+        const m = v - c;
+        let r=0,g=0,b=0;
+        if (h<60)      { r=c; g=x; b=0; }
+        else if (h<120){ r=x; g=c; b=0; }
+        else if (h<180){ r=0; g=c; b=x; }
+        else if (h<240){ r=0; g=x; b=c; }
+        else if (h<300){ r=x; g=0; b=c; }
+        else           { r=c; g=0; b=x; }
+        return { r: (r+m)*255, g:(g+m)*255, b:(b+m)*255 };
+      }
 
       // ---------- DOM ----------
       const canvas = document.getElementById('stage');
@@ -391,7 +395,6 @@
         drawStarLayer(starsNear, tSec, driftX*0.95, driftY*0.95);
         ctx.restore();
 
-        // soft nebula haze
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const haze1 = ctx.createRadialGradient(w*0.25, h*0.25, 0, w*0.25, h*0.25, Math.min(w,h)*0.65);
@@ -416,7 +419,7 @@
         { core:{r:255,g:240,b:210}, plasma:{r:255,g:210,b:120}, corona:{r:255,g:170,b:90},  spark:{r:255,g:255,b:255} },
         { core:{r:210,g:255,b:240}, plasma:{r:140,g:255,b:220}, corona:{r:120,g:200,b:255}, spark:{r:255,g:255,b:255} },
         { core:{r:255,g:220,b:235}, plasma:{r:255,g:170,b:210}, corona:{r:200,g:170,b:255}, spark:{r:255,g:255,b:255} },
-        { core:{r:200,g:230,b:255}, plasma:{r:80,g:220,b:255},  corona:{r:120,g:150,b:255}, spark:{r:255,g:255,b:255} },
+        { core:{ring:0, r:200,g:230,b:255}, plasma:{r:80,g:220,b:255},  corona:{r:120,g:150,b:255}, spark:{r:255,g:255,b:255} },
       ];
 
       let palette = structuredClone(PALETTES[0]);
@@ -543,7 +546,6 @@
 
         if (ft >= 1){
           goToScene(transition.target, nowMs);
-
           transition.t0 = nowMs;
           transition.swellMs = 0;
           transition.fadeMs = 420;
@@ -593,7 +595,7 @@
         4: SCENES.GRAVITY,
       };
 
-      // ---------- Lanterns (Lantern Sky scene) ----------
+      // ---------- Lanterns ----------
       const LANTERN_COUNT = 11;
       const lanterns = [];
 
@@ -609,87 +611,29 @@
 
       function bias01(power=2.0){ return Math.pow(Math.random(), power); }
 
-      // ---------- Lunar Phase scene ----------
+      // ---------- Moon Scene ----------
       const lunar = { x:0, y:0, r:120, speed:18, glow:0 };
+      const lunarComets = [];
+      const lunarClouds = [];
 
-      // ---------- Sun Sphere scene ----------
-      const sunScene = { sunY:0, sunR:130 };
+      // ---------- Sun Scene (loop: rise 12s -> night moon traverse 8s -> rise 12s, with clouds) ----------
+      const sunScene = {
+        sunR: 130,
+        clouds: [],
+        t: 0,             // seconds since entered
+        // phases:
+        // A: rise 12 (0..12)
+        // B: moon traverse 8 (12..20) sun down
+        // C: rise 12 (20..32)
+        cycle: 32
+      };
+      const sunMoon = { x:0, y:0, r:100, glow:0 };
 
-      // ---------- Ocean scene (improved undersea aesthetic) ----------
+      // ---------- Ocean Scene ----------
       const ocean = { lights: [], motes: [] };
 
-      function initOcean(force=false){
-        if ((!ocean.lights.length || !ocean.motes.length) && !force){
-          // fall through to create if empty
-        }
-        if (ocean.lights.length && ocean.motes.length && !force) return;
-
-        ocean.lights.length = 0;
-        ocean.motes.length = 0;
-
-        // Candle-like floats (but NO streak/lines)
-        const lightCount = 14;
-        for (let i=0;i<lightCount;i++){
-          ocean.lights.push({
-            x: rand(w*0.10, w*0.90),
-            y: rand(h*0.62, h*0.90),
-            vx: rand(-7, 7),
-            vy: rand(-1.2, 1.2),
-            r: rand(7, 12),
-            a: rand(0.38, 0.78),
-            glow: rand(0.75, 1.35),
-            wob: rand(0, Math.PI*2)
-          });
-        }
-
-        // Undersea motes / particles for depth
-        const moteCount = 90;
-        for (let i=0;i<moteCount;i++){
-          ocean.motes.push({
-            x: Math.random(),
-            y: Math.random(),
-            r: rand(0.6, 1.6),
-            a: rand(0.05, 0.16),
-            vx: rand(-4, 4),
-            vy: rand(-10, -3),
-            tw: rand(0, Math.PI*2),
-            twSp: rand(0.6, 1.4)
-          });
-        }
-      }
-
-      // ---------- Galactic Gravity scene ----------
+      // ---------- Galactic Gravity ----------
       const gravity = { bodies: [], sats: [], drag: { active:false, satIndex:-1, pointerId:null } };
-
-      function initGravity(force=false){
-        if (gravity.bodies.length && gravity.sats.length && !force) return;
-
-        gravity.bodies = [
-          { x: w*0.30, y: h*0.42, r: clamp(Math.min(w,h)*0.080, 38, 72) },
-          { x: w*0.58, y: h*0.52, r: clamp(Math.min(w,h)*0.095, 44, 84) },
-          { x: w*0.78, y: h*0.35, r: clamp(Math.min(w,h)*0.070, 34, 64) },
-        ];
-
-        gravity.sats.length = 0;
-        const satCount = 11;
-        for (let i=0;i<satCount;i++){
-          const bi = (Math.random()*gravity.bodies.length)|0;
-          const b = gravity.bodies[bi];
-          const baseR = b.r * rand(1.6, 2.9);
-          const ang = Math.random() * Math.PI * 2;
-          gravity.sats.push({
-            bodyIndex: bi,
-            orbitRadius: baseR,
-            angle: ang,
-            omega: rand(0.25, 0.65) * (Math.random() < 0.5 ? 1 : -1),
-            x: b.x + Math.cos(ang)*baseR,
-            y: b.y + Math.sin(ang)*baseR*0.78,
-            rBase: rand(10, 16),
-            dragging: false,
-            glow: 0
-          });
-        }
-      }
 
       // ---------- Layout ----------
       function computeLayout(){
@@ -703,6 +647,8 @@
         lunar.y = h * 0.36;
 
         sunScene.sunR = clamp(minDim * 0.18, 95, 185);
+        sunMoon.r = clamp(minDim * 0.12, 72, 140);
+        sunMoon.y = h * 0.30;
       }
 
       function resize(){
@@ -723,6 +669,7 @@
       }
       window.addEventListener('resize', resize, { passive:true });
 
+      // ---------- Init ----------
       function initSatellites(force=false){
         if (satellites.length && !force) return;
         satellites.length = 0;
@@ -778,10 +725,8 @@
           lanterns.push({
             id: i,
             z,
-
             ax: x,
             ay: y,
-
             x: x + rand(-10,10) * (1 - z),
             y: y + rand(-10,10) * (1 - z),
             vx: rand(-6,6) * (1 - z),
@@ -795,12 +740,95 @@
             bob: rand(2, 8) * lerp(1.0, 0.55, z),
             flick: rand(0, Math.PI*2),
 
-            mode: 'cozy',
             vividIndex: colorIndex,
-
             glow: 0
           });
         }
+      }
+
+      function initOcean(force=false){
+        if (ocean.lights.length && ocean.motes.length && !force) return;
+
+        ocean.lights.length = 0;
+        ocean.motes.length = 0;
+
+        // Firefly sprites (tap to startle)
+        const lightCount = 14;
+        for (let i=0;i<lightCount;i++){
+          ocean.lights.push({
+            x: rand(w*0.10, w*0.90),
+            y: rand(h*0.62, h*0.90),
+            vx: rand(-7, 7),
+            vy: rand(-1.2, 1.2),
+            r: rand(7, 12),
+            a: rand(0.38, 0.78),
+            glow: rand(0.75, 1.35),
+            wob: rand(0, Math.PI*2),
+            startledUntil: 0,
+            homeY: 0
+          });
+        }
+        for (const p of ocean.lights) p.homeY = p.y;
+
+        // Undersea motes
+        const moteCount = 90;
+        for (let i=0;i<moteCount;i++){
+          ocean.motes.push({
+            x: Math.random(),
+            y: Math.random(),
+            r: rand(0.6, 1.6),
+            a: rand(0.05, 0.16),
+            vx: rand(-4, 4),
+            vy: rand(-10, -3),
+            tw: rand(0, Math.PI*2),
+            twSp: rand(0.6, 1.4)
+          });
+        }
+      }
+
+      function initGravity(force=false){
+        if (gravity.bodies.length && gravity.sats.length && !force) return;
+
+        const minDim = Math.min(w,h);
+
+        gravity.bodies = [
+          { x: w*0.30, y: h*0.42, r: clamp(minDim*0.080, 38, 72), hue: rand(185, 215) },
+          { x: w*0.58, y: h*0.52, r: clamp(minDim*0.095, 44, 84), hue: rand(260, 295) },
+          { x: w*0.78, y: h*0.35, r: clamp(minDim*0.070, 34, 64), hue: rand(25, 55)  },
+        ];
+
+        gravity.sats.length = 0;
+        const satCount = 11;
+        for (let i=0;i<satCount;i++){
+          const bi = (Math.random()*gravity.bodies.length)|0;
+          const b = gravity.bodies[bi];
+          const baseR = b.r * rand(1.6, 2.9);
+          const ang = Math.random() * Math.PI * 2;
+          gravity.sats.push({
+            bodyIndex: bi,
+            orbitRadius: baseR,
+            angle: ang,
+            omega: rand(0.25, 0.65) * (Math.random() < 0.5 ? 1 : -1),
+            x: b.x + Math.cos(ang)*baseR,
+            y: b.y + Math.sin(ang)*baseR*0.78,
+            rBase: rand(10, 16),
+            dragging: false,
+            glow: 0,
+            hue: (b.hue + rand(-25, 25))
+          });
+        }
+      }
+
+      function resetSunScene(nowMs){
+        sunScene.t = 0;
+        sunScene.clouds.length = 0;
+        sunMoon.x = w + sunMoon.r*1.2;
+        sunMoon.glow = 0;
+      }
+
+      function resetLunarScene(nowMs){
+        lunarComets.length = 0;
+        lunarClouds.length = 0;
       }
 
       // ---------- Drawing helpers (celestial) ----------
@@ -1022,7 +1050,7 @@
         ctx.restore();
       }
 
-      // ---------- Lantern motion ----------
+      // ---------- Lantern motion + draw ----------
       function updateLanterns(dt, tSec){
         const padX = 22;
         const minX = padX;
@@ -1176,19 +1204,37 @@
         ctx.restore();
       }
 
+      function drawLanternSkyOverlays(){
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const sky = ctx.createRadialGradient(w*0.52, h*0.32, 0, w*0.52, h*0.42, Math.min(w,h)*0.95);
+        sky.addColorStop(0.0, 'rgba(255,190,120,0.065)');
+        sky.addColorStop(0.55, 'rgba(255,160,90,0.03)');
+        sky.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0,0,w,h);
+
+        ctx.globalCompositeOperation = 'multiply';
+        const vig = ctx.createRadialGradient(w*0.5, h*0.45, Math.min(w,h)*0.20, w*0.5, h*0.45, Math.min(w,h)*0.78);
+        vig.addColorStop(0.0, 'rgba(0,0,0,0)');
+        vig.addColorStop(0.75, 'rgba(0,0,0,0.18)');
+        vig.addColorStop(1.0, 'rgba(0,0,0,0.34)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      }
+
       // ---------- Celestial animation ----------
       function updateCelestialIdle(obj, nowMs){
         const t = nowMs * 0.001;
         obj.scale = 1 + 0.020 * Math.sin(t * 2 * Math.PI / 6.2);
         obj.intensity = 1.0 + 0.06 * (0.5 + 0.5*Math.sin(t * 2*Math.PI / 7.2));
       }
-
       function startBloom(obj, nowMs){
         pickNewPalette(nowMs);
         obj.state = 'bloomUp';
         obj.t0 = nowMs;
       }
-
       function updateCelestial(obj, nowMs, opts){
         const { bloomScale=3.0 } = opts || {};
         if (obj.state === 'idle'){
@@ -1292,10 +1338,17 @@
       function hitLunarMoon(x,y){
         return inHitCircle(x,y,lunar.x,lunar.y,lunar.r*0.92);
       }
+      function hitOceanLight(x,y){
+        for (let i=ocean.lights.length-1; i>=0; i--){
+          const p = ocean.lights[i];
+          if (inHitCircle(x,y,p.x,p.y,p.r*1.9)) return i;
+        }
+        return -1;
+      }
       function hitGravitySat(x,y){
         for (let i = gravity.sats.length - 1; i >= 0; i--){
           const s = gravity.sats[i];
-          if (inHitCircle(x,y,s.x,s.y,s.rBase*1.9)) return i;
+          if (inHitCircle(x,y,s.x,s.y,s.rBase*2.1)) return i;
         }
         return -1;
       }
@@ -1313,7 +1366,7 @@
         return false;
       }
 
-      // ---------- Star hub drag ----------
+      // ---------- Drag ----------
       const drag = { active:false, satIndex:-1, pointerId:null };
 
       // ---------- Scene navigation ----------
@@ -1327,10 +1380,11 @@
         if (next === SCENES.LUNAR){
           lunar.x = -lunar.r * 1.25;
           lunar.glow = 0;
+          resetLunarScene(nowMs);
         }
 
         if (next === SCENES.SUN){
-          sunScene.sunY = h + sunScene.sunR * 1.15;
+          resetSunScene(nowMs);
         }
 
         if (next === SCENES.OCEAN){
@@ -1368,32 +1422,359 @@
         goToScene(SCENES.STAR, performance.now());
       });
 
-      // ---------- Scene drawing helpers ----------
-      function drawLanternSkyOverlays(){
+      // ---------- Ocean aesthetic helpers ----------
+      function drawUnderseaBackdrop(tSec){
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-over';
+        const g = ctx.createLinearGradient(0,0,0,h);
+        g.addColorStop(0.0, 'rgba(10, 55, 80, 0.55)');
+        g.addColorStop(0.35, 'rgba(6, 40, 70, 0.65)');
+        g.addColorStop(0.75, 'rgba(3, 20, 45, 0.78)');
+        g.addColorStop(1.0, 'rgba(2, 8, 22, 0.90)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const sky = ctx.createRadialGradient(w*0.52, h*0.32, 0, w*0.52, h*0.42, Math.min(w,h)*0.95);
-        sky.addColorStop(0.0, 'rgba(255,190,120,0.065)');
-        sky.addColorStop(0.55, 'rgba(255,160,90,0.03)');
-        sky.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = sky;
-        ctx.fillRect(0,0,w,h);
+        ctx.globalAlpha = 0.18;
+        const rayCount = 6;
+        for (let i=0;i<rayCount;i++){
+          const x = w*(0.15 + 0.70*(i/(rayCount-1))) + Math.sin(tSec*0.12 + i*1.7)*18;
+          const y = h*0.05 + Math.cos(tSec*0.10 + i)*10;
+          const r1 = Math.min(w,h) * 0.95;
 
+          const rg = ctx.createRadialGradient(x, y, 0, x, y, r1);
+          rg.addColorStop(0.00, 'rgba(210,250,255,0.28)');
+          rg.addColorStop(0.22, 'rgba(170,235,255,0.14)');
+          rg.addColorStop(0.58, 'rgba(120,200,255,0.06)');
+          rg.addColorStop(1.00, 'rgba(0,0,0,0)');
+
+          ctx.filter = 'blur(18px)';
+          ctx.fillStyle = rg;
+          ctx.fillRect(0,0,w,h);
+        }
+        ctx.filter = 'none';
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.22;
+        ctx.filter = 'blur(8px)';
+
+        const cell = 110;
+        for (let y=0; y<=h+cell; y+=cell){
+          for (let x=0; x<=w+cell; x+=cell){
+            const nx = x / w;
+            const ny = y / h;
+
+            const p1 = Math.sin(nx*10.0 + tSec*0.55) * Math.cos(ny*12.0 - tSec*0.42);
+            const p2 = Math.cos(nx*7.0  - tSec*0.33) * Math.sin(ny*9.0  + tSec*0.60);
+            const p3 = Math.sin((nx+ny)*11.0 + tSec*0.25);
+            const v = (p1 + p2 + 0.7*p3) / 2.7;
+
+            const depthFade = clamp(1 - Math.pow(ny, 1.25), 0, 1);
+            const a = clamp((v*0.55 + 0.45), 0, 1) * depthFade;
+
+            if (a < 0.08) continue;
+
+            const rr = cell * (0.55 + 0.55*a);
+            const cg = ctx.createRadialGradient(x, y, rr*0.05, x, y, rr);
+            cg.addColorStop(0.0, `rgba(210,255,255,${0.18*a})`);
+            cg.addColorStop(0.5, `rgba(140,230,255,${0.10*a})`);
+            cg.addColorStop(1.0, 'rgba(0,0,0,0)');
+            ctx.fillStyle = cg;
+            ctx.fillRect(x-rr, y-rr, rr*2, rr*2);
+          }
+        }
+        ctx.filter = 'none';
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-over';
+        const fog = ctx.createLinearGradient(0,0,0,h);
+        fog.addColorStop(0.0, 'rgba(255,255,255,0.02)');
+        fog.addColorStop(0.35, 'rgba(180,240,255,0.05)');
+        fog.addColorStop(0.70, 'rgba(30,80,120,0.10)');
+        fog.addColorStop(1.0, 'rgba(0,0,0,0.20)');
+        ctx.fillStyle = fog;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      }
+
+      function updateAndDrawOcean(dt, tSec, nowMs){
+        initOcean(false);
+
+        drawUnderseaBackdrop(tSec);
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const surf = ctx.createRadialGradient(w*0.52, h*0.02, 0, w*0.52, h*0.02, Math.min(w,h)*0.85);
+        surf.addColorStop(0.00, 'rgba(225,255,255,0.22)');
+        surf.addColorStop(0.30, 'rgba(160,240,255,0.10)');
+        surf.addColorStop(1.00, 'rgba(0,0,0,0)');
+        ctx.filter = 'blur(10px)';
+        ctx.fillStyle = surf;
+        ctx.fillRect(0,0,w,h);
+        ctx.filter = 'none';
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (const m of ocean.motes){
+          m.tw += m.twSp * dt;
+          const tw = 0.75 + 0.25 * Math.sin(m.tw);
+
+          m.x = (m.x + (m.vx * dt) / w);
+          m.y = (m.y + (m.vy * dt) / h);
+
+          if (m.x < -0.05) m.x = 1.05;
+          if (m.x > 1.05)  m.x = -0.05;
+          if (m.y < -0.05) m.y = 1.05;
+          if (m.y > 1.05)  m.y = -0.05;
+
+          const px = m.x * w;
+          const py = m.y * h;
+
+          const depth = clamp(1 - Math.abs(m.y - 0.45) * 1.2, 0, 1);
+          ctx.fillStyle = `rgba(220,250,255,${m.a * tw * depth})`;
+          ctx.beginPath();
+          ctx.arc(px, py, m.r * tw, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Firefly sprites (tap startled)
+        for (const p of ocean.lights){
+          p.wob += dt * 1.2;
+
+          const startled = nowMs < p.startledUntil;
+
+          // Base drift
+          p.x += p.vx * dt;
+          p.y += p.vy * dt + Math.sin(p.wob) * 0.25;
+
+          // If startled: add jitter and stronger upward pull for a moment
+          if (startled){
+            p.x += Math.sin(p.wob*8.5 + p.x*0.01) * 18 * dt;
+            p.y += -rand(30, 60) * dt;
+          } else {
+            // gently return toward original band (feels calmer)
+            const targetY = p.homeY;
+            p.y += (targetY - p.y) * (dt * 0.20);
+          }
+
+          // wrap
+          if (p.x < -60) p.x = w + 60;
+          if (p.x > w + 60) p.x = -60;
+
+          // keep in lower half; allow startled to shoot upward a bit
+          const yMin = h*0.40;
+          const yMax = h*0.90;
+          p.y = clamp(p.y, yMin, yMax);
+
+          const flick = 0.78 + 0.22*Math.sin(p.wob*1.9);
+          const rr = p.r;
+
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = 0.85 * p.a;
+          ctx.filter = 'blur(6px)';
+          const halo = ctx.createRadialGradient(p.x, p.y, rr*0.12, p.x, p.y, rr*7.0);
+          halo.addColorStop(0.0, `rgba(255,235,190,${0.22*p.glow*flick})`);
+          halo.addColorStop(0.35, `rgba(255,190,140,${0.13*p.glow*flick})`);
+          halo.addColorStop(0.70, `rgba(170,230,255,${0.06*p.glow*flick})`);
+          halo.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = halo;
+          ctx.fillRect(0,0,w,h);
+          ctx.filter = 'none';
+          ctx.restore();
+
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          const core = ctx.createRadialGradient(p.x, p.y, rr*0.02, p.x, p.y, rr*1.15);
+          core.addColorStop(0.0, `rgba(255,255,255,${0.82*p.a})`);
+          core.addColorStop(0.25, `rgba(255,245,220,${0.65*p.a})`);
+          core.addColorStop(0.65, `rgba(255,210,160,${0.28*p.a})`);
+          core.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = core;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, rr, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        ctx.save();
         ctx.globalCompositeOperation = 'multiply';
-        const vig = ctx.createRadialGradient(w*0.5, h*0.45, Math.min(w,h)*0.20, w*0.5, h*0.45, Math.min(w,h)*0.78);
+        const vig = ctx.createRadialGradient(w*0.5, h*0.55, Math.min(w,h)*0.20, w*0.5, h*0.55, Math.min(w,h)*0.88);
         vig.addColorStop(0.0, 'rgba(0,0,0,0)');
-        vig.addColorStop(0.75, 'rgba(0,0,0,0.18)');
+        vig.addColorStop(0.65, 'rgba(0,0,0,0.14)');
         vig.addColorStop(1.0, 'rgba(0,0,0,0.34)');
         ctx.fillStyle = vig;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
       }
 
+      // ---------- Clouds (soft blobs) ----------
+      function spawnCloud(arr, dir, nowMs, yMin=0.10, yMax=0.45){
+        const y = rand(h*yMin, h*yMax);
+        const s = rand(0.65, 1.35);
+        const speed = rand(10, 26) * dir;
+        const x = (dir > 0) ? -w*0.15 : w*1.15;
+
+        const hue = rand(185, 210);
+        const tint = hsvToRgb(hue, 0.20, 1.0);
+
+        arr.push({
+          x, y,
+          vx: speed,
+          s,
+          a: rand(0.10, 0.22),
+          t0: nowMs,
+          wob: rand(0, Math.PI*2),
+          tint
+        });
+      }
+
+      function updateAndDrawClouds(arr, dt, tSec, nowMs, dir){
+        // spawn sometimes
+        if (Math.random() < dt * 0.12){
+          spawnCloud(arr, dir, nowMs);
+        }
+
+        for (let i=arr.length-1; i>=0; i--){
+          const c = arr[i];
+          c.wob += dt * 0.35;
+          c.x += c.vx * dt;
+          c.y += Math.sin(c.wob) * 0.25;
+
+          const off = (dir > 0) ? (c.x > w*1.25) : (c.x < -w*0.25);
+          if (off){
+            arr.splice(i,1);
+            continue;
+          }
+
+          const s = c.s;
+          const w0 = 220 * s;
+          const h0 = 85 * s;
+
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = c.a;
+          ctx.filter = 'blur(14px)';
+
+          const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, w0*0.85);
+          g.addColorStop(0.0, `rgba(${c.tint.r|0},${c.tint.g|0},${c.tint.b|0},0.40)`);
+          g.addColorStop(0.55, `rgba(255,255,255,0.18)`);
+          g.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = g;
+          ctx.fillRect(c.x-w0, c.y-h0, w0*2, h0*2);
+
+          ctx.filter = 'none';
+          ctx.restore();
+        }
+      }
+
+      // ---------- Comets ----------
+      function spawnComet(arr){
+        const startSide = Math.random() < 0.5 ? 'left' : 'right';
+        const x = (startSide === 'left') ? -w*0.10 : w*1.10;
+        const y = rand(h*0.05, h*0.42);
+        const dir = (startSide === 'left') ? 1 : -1;
+
+        const vx = rand(320, 520) * dir;
+        const vy = rand(40, 120);
+        const life = rand(0.55, 0.85);
+
+        arr.push({
+          x, y,
+          vx, vy,
+          life,
+          age: 0,
+          r: rand(2.8, 4.8),
+          hue: rand(185, 210)
+        });
+      }
+
+      function updateAndDrawComets(arr, dt){
+        if (Math.random() < dt * 0.22){
+          spawnComet(arr);
+        }
+
+        for (let i=arr.length-1; i>=0; i--){
+          const c = arr[i];
+          c.age += dt;
+          c.x += c.vx * dt;
+          c.y += c.vy * dt;
+
+          const t = clamp(c.age / c.life, 0, 1);
+          const a = (1 - t) * 0.55;
+
+          if (t >= 1){
+            arr.splice(i,1);
+            continue;
+          }
+
+          const col = hsvToRgb(c.hue, 0.25, 1.0);
+
+          // tail
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = a;
+          ctx.filter = 'blur(2.5px)';
+
+          const tailLen = 180;
+          const tx = c.x - (c.vx>0 ? 1 : -1) * tailLen;
+          const ty = c.y - tailLen*0.22;
+
+          const g = ctx.createLinearGradient(c.x, c.y, tx, ty);
+          g.addColorStop(0.0, `rgba(255,255,255,0.30)`);
+          g.addColorStop(0.35, `rgba(${col.r|0},${col.g|0},${col.b|0},0.22)`);
+          g.addColorStop(1.0, 'rgba(0,0,0,0)');
+
+          ctx.strokeStyle = g;
+          ctx.lineWidth = 5.0;
+          ctx.beginPath();
+          ctx.moveTo(c.x, c.y);
+          ctx.lineTo(tx, ty);
+          ctx.stroke();
+
+          // head glow
+          const halo = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 40);
+          halo.addColorStop(0.0, `rgba(255,255,255,0.30)`);
+          halo.addColorStop(0.35, `rgba(${col.r|0},${col.g|0},${col.b|0},0.18)`);
+          halo.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = halo;
+          ctx.fillRect(c.x-60, c.y-60, 120, 120);
+
+          ctx.filter = 'none';
+          ctx.restore();
+
+          // core dot
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = a;
+          ctx.fillStyle = 'rgba(255,255,255,0.75)';
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, c.r, 0, Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      // ---------- Lunar scene ----------
       function updateAndDrawLunar(dt, tSec, nowMs){
+        // big moon gliding (left->right like before)
         lunar.x += lunar.speed * dt;
         if (lunar.x > w + lunar.r*1.25) lunar.x = -lunar.r*1.25;
 
         lunar.glow = Math.max(0, lunar.glow - dt * 1.1);
+
+        // Comets across the sky
+        updateAndDrawComets(lunarComets, dt);
+
+        // Clouds sometimes drift right->left
+        updateAndDrawClouds(lunarClouds, dt, tSec, nowMs, -1);
 
         const rr = lunar.r;
         const glow = 0.18 + 0.75*lunar.glow;
@@ -1434,12 +1815,9 @@
         ctx.restore();
       }
 
-      function updateAndDrawSunSphere(dt, tSec, nowMs){
-        const elapsed = (nowMs - sceneEnteredAt) * 0.001;
-        const dur = 8.0;
-        const p = clamp(elapsed / dur, 0, 1);
-        const e = easeInOutCubic(p);
-
+      // ---------- Sun scene (loop) ----------
+      function drawSunSkyForPhase(p){
+        // p 0..1 for dayness
         const topFrom = { r: 18, g: 8,  b: 20 };
         const midFrom = { r: 64, g: 18, b: 32 };
         const botFrom = { r: 10, g: 16, b: 42 };
@@ -1448,32 +1826,26 @@
         const midTo   = { r: 80,  g: 160, b: 255 };
         const botTo   = { r: 40,  g: 120, b: 235 };
 
-        const top = lerpColor(topFrom, topTo, e);
-        const mid = lerpColor(midFrom, midTo, e);
-        const bot = lerpColor(botFrom, botTo, e);
+        const top = lerpColor(topFrom, topTo, p);
+        const mid = lerpColor(midFrom, midTo, p);
+        const bot = lerpColor(botFrom, botTo, p);
 
         const g = ctx.createLinearGradient(0,0,0,h);
         g.addColorStop(0.0, toRGBA(top, 1));
         g.addColorStop(0.55, toRGBA(mid, 1));
         g.addColorStop(1.0, toRGBA(bot, 1));
+
         ctx.save();
         ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = g;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
+      }
 
-        ctx.save();
-        ctx.globalAlpha = (1 - e) * 0.55;
-        drawStarLayer(starsFar,  tSec, 0, 0);
-        drawStarLayer(starsMid,  tSec, 0, 0);
-        drawStarLayer(starsNear, tSec, 0, 0);
-        ctx.restore();
-
-        const sun = { x: w*0.5, y: lerp(h + sunScene.sunR*1.1, h*0.42, e), r: sunScene.sunR };
-
+      function drawSunSphere(x,y,r){
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        const halo = ctx.createRadialGradient(sun.x, sun.y, sun.r*0.2, sun.x, sun.y, sun.r*3.3);
+        const halo = ctx.createRadialGradient(x, y, r*0.2, x, y, r*3.3);
         halo.addColorStop(0.0, 'rgba(255,245,210,0.28)');
         halo.addColorStop(0.35, 'rgba(255,205,120,0.16)');
         halo.addColorStop(0.85, 'rgba(255,205,120,0.06)');
@@ -1484,205 +1856,175 @@
 
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        const body = ctx.createRadialGradient(sun.x, sun.y, sun.r*0.04, sun.x, sun.y, sun.r*1.05);
+        const body = ctx.createRadialGradient(x, y, r*0.04, x, y, r*1.05);
         body.addColorStop(0.0, 'rgba(255,255,255,0.95)');
         body.addColorStop(0.22, 'rgba(255,245,190,0.90)');
         body.addColorStop(0.62, 'rgba(255,200,90,0.60)');
         body.addColorStop(1.0, 'rgba(0,0,0,0)');
         ctx.fillStyle = body;
         ctx.beginPath();
-        ctx.arc(sun.x, sun.y, sun.r, 0, Math.PI*2);
+        ctx.arc(x, y, r, 0, Math.PI*2);
         ctx.fill();
         ctx.restore();
       }
 
-      // --- Ocean aesthetic helpers (caustics + rays + fog) ---
-      function drawUnderseaBackdrop(tSec){
-        // Deep water gradient (undersea feel)
+      function drawSunMoon(x,y,r,glow){
+        const g = 0.22 + 0.78*glow;
+
         ctx.save();
-        ctx.globalCompositeOperation = 'source-over';
-        const g = ctx.createLinearGradient(0,0,0,h);
-        g.addColorStop(0.0, 'rgba(10, 55, 80, 0.55)');  // surface tint
-        g.addColorStop(0.35, 'rgba(6, 40, 70, 0.65)');
-        g.addColorStop(0.75, 'rgba(3, 20, 45, 0.78)');
-        g.addColorStop(1.0, 'rgba(2, 8, 22, 0.90)');   // deep
-        ctx.fillStyle = g;
+        ctx.globalCompositeOperation = 'screen';
+        const halo = ctx.createRadialGradient(x, y, r*0.15, x, y, r*2.7);
+        halo.addColorStop(0.0, `rgba(220,245,255,${0.22*g})`);
+        halo.addColorStop(0.55, `rgba(180,220,255,${0.08*g})`);
+        halo.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = halo;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // Soft volumetric rays (no hard "lines")
         ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.18;
-        const rayCount = 6;
-        for (let i=0;i<rayCount;i++){
-          const x = w*(0.15 + 0.70*(i/(rayCount-1))) + Math.sin(tSec*0.12 + i*1.7)*18;
-          const y = h*0.05 + Math.cos(tSec*0.10 + i)*10;
-          const r0 = 0;
-          const r1 = Math.min(w,h) * 0.95;
-
-          const rg = ctx.createRadialGradient(x, y, r0, x, y, r1);
-          rg.addColorStop(0.00, 'rgba(210,250,255,0.28)');
-          rg.addColorStop(0.22, 'rgba(170,235,255,0.14)');
-          rg.addColorStop(0.58, 'rgba(120,200,255,0.06)');
-          rg.addColorStop(1.00, 'rgba(0,0,0,0)');
-
-          ctx.filter = 'blur(18px)';
-          ctx.fillStyle = rg;
-          ctx.fillRect(0,0,w,h);
-        }
-        ctx.filter = 'none';
-        ctx.restore();
-
-        // Caustics / dappled light: soft moving interference (no stroke lines)
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.22;
-        ctx.filter = 'blur(8px)';
-
-        const cell = 110; // coarse grid for performance
-        for (let y=0; y<=h+cell; y+=cell){
-          for (let x=0; x<=w+cell; x+=cell){
-            const nx = x / w;
-            const ny = y / h;
-
-            // Interference pattern
-            const p1 = Math.sin(nx*10.0 + tSec*0.55) * Math.cos(ny*12.0 - tSec*0.42);
-            const p2 = Math.cos(nx*7.0  - tSec*0.33) * Math.sin(ny*9.0  + tSec*0.60);
-            const p3 = Math.sin((nx+ny)*11.0 + tSec*0.25);
-            const v = (p1 + p2 + 0.7*p3) / 2.7;
-
-            // Brightness weighted toward upper water; fades with depth
-            const depthFade = clamp(1 - Math.pow(ny, 1.25), 0, 1);
-            const a = clamp((v*0.55 + 0.45), 0, 1) * depthFade;
-
-            if (a < 0.08) continue;
-
-            const rr = cell * (0.55 + 0.55*a);
-            const cg = ctx.createRadialGradient(x, y, rr*0.05, x, y, rr);
-            cg.addColorStop(0.0, `rgba(210,255,255,${0.18*a})`);
-            cg.addColorStop(0.5, `rgba(140,230,255,${0.10*a})`);
-            cg.addColorStop(1.0, 'rgba(0,0,0,0)');
-            ctx.fillStyle = cg;
-            ctx.fillRect(x-rr, y-rr, rr*2, rr*2);
-          }
-        }
-        ctx.filter = 'none';
-        ctx.restore();
-
-        // Depth fog / diffusion
-        ctx.save();
-        ctx.globalCompositeOperation = 'source-over';
-        const fog = ctx.createLinearGradient(0,0,0,h);
-        fog.addColorStop(0.0, 'rgba(255,255,255,0.02)');
-        fog.addColorStop(0.35, 'rgba(180,240,255,0.05)');
-        fog.addColorStop(0.70, 'rgba(30,80,120,0.10)');
-        fog.addColorStop(1.0, 'rgba(0,0,0,0.20)');
-        ctx.fillStyle = fog;
-        ctx.fillRect(0,0,w,h);
+        ctx.globalCompositeOperation = 'lighter';
+        const body = ctx.createRadialGradient(x, y, r*0.04, x, y, r*1.08);
+        body.addColorStop(0.0, 'rgba(245,250,255,0.98)');
+        body.addColorStop(0.52, 'rgba(210,235,255,0.42)');
+        body.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI*2);
+        ctx.fill();
         ctx.restore();
       }
 
-      function updateAndDrawOcean(dt, tSec, nowMs){
-        initOcean(false);
+      function updateAndDrawSunScene(dt, tSec, nowMs){
+        sunScene.t += dt;
+        if (sunScene.t > sunScene.cycle) sunScene.t -= sunScene.cycle;
 
-        // Undersea base (pretty + depth + caustics)
-        drawUnderseaBackdrop(tSec);
+        const t = sunScene.t;
 
-        // "Surface" hint: soft bright cap at the very top
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const surf = ctx.createRadialGradient(w*0.52, h*0.02, 0, w*0.52, h*0.02, Math.min(w,h)*0.85);
-        surf.addColorStop(0.00, 'rgba(225,255,255,0.22)');
-        surf.addColorStop(0.30, 'rgba(160,240,255,0.10)');
-        surf.addColorStop(1.00, 'rgba(0,0,0,0)');
-        ctx.filter = 'blur(10px)';
-        ctx.fillStyle = surf;
-        ctx.fillRect(0,0,w,h);
-        ctx.filter = 'none';
-        ctx.restore();
+        // Clouds drift left->right sometimes (across both day & night phases)
+        updateAndDrawClouds(sunScene.clouds, dt, tSec, nowMs, +1);
 
-        // Floating motes (depth)
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        for (const m of ocean.motes){
-          m.tw += m.twSp * dt;
-          const tw = 0.75 + 0.25 * Math.sin(m.tw);
+        // Decide phase
+        // A: 0..12 sun rising
+        // B: 12..20 night, moon right->left traverse (8s)
+        // C: 20..32 sun rising again
+        let dayness = 0;
+        let sunY = h + sunScene.sunR*1.15;
 
-          m.x = (m.x + (m.vx * dt) / w);
-          m.y = (m.y + (m.vy * dt) / h);
-
-          if (m.x < -0.05) m.x = 1.05;
-          if (m.x > 1.05)  m.x = -0.05;
-          if (m.y < -0.05) m.y = 1.05;
-          if (m.y > 1.05)  m.y = -0.05;
-
-          const px = m.x * w;
-          const py = m.y * h;
-
-          // stronger motes near mid-depth, softer deep
-          const depth = clamp(1 - Math.abs(m.y - 0.45) * 1.2, 0, 1);
-          ctx.fillStyle = `rgba(220,250,255,${m.a * tw * depth})`;
-          ctx.beginPath();
-          ctx.arc(px, py, m.r * tw, 0, Math.PI*2);
-          ctx.fill();
+        if (t < 12){
+          const p = easeInOutCubic(clamp(t/12,0,1));
+          dayness = p;
+          sunY = lerp(h + sunScene.sunR*1.15, h*0.42, p);
+        } else if (t < 20){
+          // night
+          dayness = 0.0;
+          sunY = h + sunScene.sunR*1.20; // dipped
+        } else {
+          const p = easeInOutCubic(clamp((t-20)/12,0,1));
+          dayness = p;
+          sunY = lerp(h + sunScene.sunR*1.15, h*0.42, p);
         }
-        ctx.restore();
 
-        // Candle lights (NO wave lines, NO reflection ellipses)
-        for (const p of ocean.lights){
-          p.wob += dt * 1.2;
-          p.x += p.vx * dt;
-          p.y += p.vy * dt + Math.sin(p.wob) * 0.25;
+        drawSunSkyForPhase(dayness);
 
-          if (p.x < -60) p.x = w + 60;
-          if (p.x > w + 60) p.x = -60;
-
-          // keep them in lower half, like “guiding lights”
-          p.y = clamp(p.y, h*0.62, h*0.90);
-
-          const flick = 0.78 + 0.22*Math.sin(p.wob*1.9);
-          const rr = p.r;
-
-          // soft bloom
+        // add some stars during night
+        if (dayness < 0.25){
           ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.globalAlpha = 0.85 * p.a;
-          ctx.filter = 'blur(6px)';
-          const halo = ctx.createRadialGradient(p.x, p.y, rr*0.12, p.x, p.y, rr*7.0);
-          halo.addColorStop(0.0, `rgba(255,235,190,${0.22*p.glow*flick})`);
-          halo.addColorStop(0.35, `rgba(255,190,140,${0.13*p.glow*flick})`);
-          halo.addColorStop(0.70, `rgba(170,230,255,${0.06*p.glow*flick})`);
-          halo.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = halo;
-          ctx.fillRect(0,0,w,h);
-          ctx.filter = 'none';
-          ctx.restore();
-
-          // orb core (small + crisp)
-          ctx.save();
-          ctx.globalCompositeOperation = 'lighter';
-          const core = ctx.createRadialGradient(p.x, p.y, rr*0.02, p.x, p.y, rr*1.15);
-          core.addColorStop(0.0, `rgba(255,255,255,${0.82*p.a})`);
-          core.addColorStop(0.25, `rgba(255,245,220,${0.65*p.a})`);
-          core.addColorStop(0.65, `rgba(255,210,160,${0.28*p.a})`);
-          core.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = core;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, rr, 0, Math.PI*2);
-          ctx.fill();
+          ctx.globalAlpha = (0.35 - dayness) * 1.2;
+          drawStarLayer(starsFar,  tSec, 0, 0);
+          drawStarLayer(starsMid,  tSec, 0, 0);
+          drawStarLayer(starsNear, tSec, 0, 0);
           ctx.restore();
         }
 
-        // gentle vignette for depth
+        // draw sun when above-ish
+        if (dayness > 0.10){
+          drawSunSphere(w*0.5, sunY, sunScene.sunR);
+        }
+
+        // moon traverse during night window 12..20, right->left over 8s
+        if (t >= 12 && t < 20){
+          const p = clamp((t-12)/8, 0, 1);
+          const e = easeInOutCubic(p);
+          sunMoon.x = lerp(w + sunMoon.r*1.2, -sunMoon.r*1.2, e);
+          sunMoon.glow = 0.25 + 0.25*Math.sin(tSec*0.6);
+          drawSunMoon(sunMoon.x, sunMoon.y, sunMoon.r, sunMoon.glow);
+        }
+      }
+
+      // ---------- Gravity aesthetics ----------
+      function drawGravityBody(b, tSec){
+        const hue = b.hue;
+        const core = hsvToRgb(hue, 0.18, 1.0);
+        const rim  = hsvToRgb(hue+12, 0.35, 1.0);
+        const glow = hsvToRgb(hue+6,  0.45, 1.0);
+
         ctx.save();
-        ctx.globalCompositeOperation = 'multiply';
-        const vig = ctx.createRadialGradient(w*0.5, h*0.55, Math.min(w,h)*0.20, w*0.5, h*0.55, Math.min(w,h)*0.88);
-        vig.addColorStop(0.0, 'rgba(0,0,0,0)');
-        vig.addColorStop(0.65, 'rgba(0,0,0,0.14)');
-        vig.addColorStop(1.0, 'rgba(0,0,0,0.34)');
-        ctx.fillStyle = vig;
+        ctx.globalCompositeOperation = 'screen';
+        const halo = ctx.createRadialGradient(b.x, b.y, b.r*0.20, b.x, b.y, b.r*3.2);
+        halo.addColorStop(0.0, `rgba(${glow.r|0},${glow.g|0},${glow.b|0},0.18)`);
+        halo.addColorStop(0.55, `rgba(${glow.r|0},${glow.g|0},${glow.b|0},0.07)`);
+        halo.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = halo;
         ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const body = ctx.createRadialGradient(b.x, b.y, b.r*0.05, b.x, b.y, b.r*1.10);
+        body.addColorStop(0.0, `rgba(255,255,255,0.55)`);
+        body.addColorStop(0.22, `rgba(${core.r|0},${core.g|0},${core.b|0},0.45)`);
+        body.addColorStop(0.62, `rgba(${rim.r|0},${rim.g|0},${rim.b|0},0.26)`);
+        body.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+
+        // subtle inner swirls for "alive" feeling
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.08;
+        ctx.rotate(tSec*0.06 + hue*0.01);
+        for (let i=0;i<9;i++){
+          const rr = lerp(b.r*0.15, b.r*0.95, i/8);
+          ctx.lineWidth = lerp(1.0, 3.6, i/8);
+          const col = hsvToRgb(hue + i*6, 0.32, 1.0);
+          ctx.strokeStyle = `rgba(${col.r|0},${col.g|0},${col.b|0},0.18)`;
+          ctx.beginPath();
+          ctx.arc(0,0, rr, 0.2*i, 0.2*i + 1.0 + 0.6*Math.sin(tSec*0.6+i));
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawGravitySat(s){
+        const rr = s.rBase;
+        const col = hsvToRgb(s.hue, 0.30, 1.0);
+        const col2 = hsvToRgb(s.hue+18, 0.45, 1.0);
+        const g = 0.22 + 0.78*s.glow;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const halo = ctx.createRadialGradient(s.x, s.y, rr*0.2, s.x, s.y, rr*6.0);
+        halo.addColorStop(0.0, `rgba(${col2.r|0},${col2.g|0},${col2.b|0},${0.18*g})`);
+        halo.addColorStop(0.45, `rgba(${col.r|0},${col.g|0},${col.b|0},${0.10*g})`);
+        halo.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = halo;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const body = ctx.createRadialGradient(s.x, s.y, rr*0.03, s.x, s.y, rr*1.15);
+        body.addColorStop(0.0, 'rgba(255,255,255,0.72)');
+        body.addColorStop(0.35, `rgba(${col.r|0},${col.g|0},${col.b|0},0.36)`);
+        body.addColorStop(1.0, 'rgba(0,0,0,0)');
+        ctx.fillStyle = body;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, rr, 0, Math.PI*2);
+        ctx.fill();
         ctx.restore();
       }
 
@@ -1698,9 +2040,10 @@
           s.glow = Math.max(0, s.glow - dt * 0.9);
         }
 
+        // orbit guides (soft)
         ctx.save();
-        ctx.globalAlpha = 0.16;
-        ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+        ctx.globalAlpha = 0.11;
+        ctx.strokeStyle = 'rgba(210,250,255,0.16)';
         ctx.lineWidth = 1;
         for (const s of gravity.sats){
           const b = gravity.bodies[s.bodyIndex];
@@ -1710,55 +2053,18 @@
         }
         ctx.restore();
 
+        // bodies
         for (const b of gravity.bodies){
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          const halo = ctx.createRadialGradient(b.x, b.y, b.r*0.2, b.x, b.y, b.r*3.0);
-          halo.addColorStop(0.0, 'rgba(168,160,255,0.14)');
-          halo.addColorStop(0.55, 'rgba(143,243,255,0.06)');
-          halo.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = halo;
-          ctx.fillRect(0,0,w,h);
-          ctx.restore();
-
-          ctx.save();
-          ctx.globalCompositeOperation = 'lighter';
-          const body = ctx.createRadialGradient(b.x, b.y, b.r*0.05, b.x, b.y, b.r*1.05);
-          body.addColorStop(0.0, 'rgba(255,255,255,0.60)');
-          body.addColorStop(0.35, 'rgba(170,200,255,0.28)');
-          body.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = body;
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-          ctx.fill();
-          ctx.restore();
+          drawGravityBody(b, tSec);
         }
 
+        // satellites
         for (const s of gravity.sats){
-          const rr = s.rBase;
-          const glow = 0.2 + 0.8*s.glow;
-
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          const halo = ctx.createRadialGradient(s.x, s.y, rr*0.2, s.x, s.y, rr*5.0);
-          halo.addColorStop(0.0, `rgba(255,255,255,${0.14*glow})`);
-          halo.addColorStop(0.45, `rgba(143,243,255,${0.08*glow})`);
-          halo.addColorStop(1.0, 'rgba(0,0,0,0)');
-          ctx.fillStyle = halo;
-          ctx.fillRect(0,0,w,h);
-          ctx.restore();
-
-          ctx.save();
-          ctx.globalCompositeOperation = 'lighter';
-          ctx.fillStyle = 'rgba(240,252,255,0.82)';
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, rr, 0, Math.PI*2);
-          ctx.fill();
-          ctx.restore();
+          drawGravitySat(s);
         }
       }
 
-      // ---------- Double tap + input ----------
+      // ---------- Input ----------
       canvas.addEventListener('pointerdown', (e) => {
         if (!allowInput) return;
 
