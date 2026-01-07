@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Boo Planet (v1.7)</title>
+  <title>Boo Planet (v1.7.1)</title>
 
   <!-- Retro arcade font (online). If you want offline, download and self-host. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -203,7 +203,6 @@
     }
 
     .messageCard.isVisible{
-      /* still invisible even if JS adds the class */
       opacity: 0 !important;
       transform: none;
     }
@@ -374,7 +373,6 @@
         }
       }
 
-      // A unified sky background; individual scenes may add their own overlays on top.
       function drawBackground(tSec){
         const g = ctx.createLinearGradient(0,0,0,h);
         g.addColorStop(0, '#020617');
@@ -475,7 +473,6 @@
       }
 
       // ---------- Scenes ----------
-      // star hub + 5 destination scenes
       const SCENES = {
         STAR: 'star',
         LANTERN: 'lantern',
@@ -490,7 +487,6 @@
       let sceneEnteredAt = performance.now();
 
       function updateBackButton(){
-        // Back appears on any destination scene, returning to star hub.
         const show = (allowInput && scene !== SCENES.STAR);
         backBtn.style.display = show ? 'block' : 'none';
       }
@@ -502,7 +498,6 @@
         t0: 0,
         swellMs: 2000,
         fadeMs: 450,
-        holdMs: 0,
         scaleFrom: 1,
         scaleTo: 6,
         alpha: 0,
@@ -517,7 +512,6 @@
         transition.scaleFrom = star.scale;
         transition.scaleTo = 6;
 
-        // lock all input until transition completes
         allowInput = false;
         updateBackButton();
       }
@@ -536,7 +530,6 @@
 
         const t = nowMs - transition.t0;
 
-        // Swell phase
         if (t <= transition.swellMs){
           const tt = easeInOutCubic(clamp(t / transition.swellMs, 0, 1));
           star.scale = lerp(transition.scaleFrom, transition.scaleTo, tt);
@@ -544,17 +537,13 @@
           return;
         }
 
-        // Fade out phase
         const tf = t - transition.swellMs;
         const ft = clamp(tf / transition.fadeMs, 0, 1);
         transition.alpha = easeOutCubic(ft);
 
-        // When fade completes, swap scene and reset star scale
         if (ft >= 1){
-          // hard swap
           goToScene(transition.target, nowMs);
 
-          // keep a quick fade-in by starting alpha at 1 and letting it drop for a moment
           transition.t0 = nowMs;
           transition.swellMs = 0;
           transition.fadeMs = 420;
@@ -571,7 +560,6 @@
         if (ft >= 1){
           transition.active = false;
           transition.alpha = 0;
-          // re-enable input once we are fully in the new scene
           allowInput = true;
           updateBackButton();
         }
@@ -597,8 +585,6 @@
       const satellites = [];
       const SAT_COUNT = 5;
 
-      // Each satellite leads to a different second scene on Boo Planet:
-      // 1 Lantern Sky, 2 Lunar Phase, 3 Sun Sphere, 4 Ocean Scene, 5 Galactic Gravity
       const SAT_TO_SCENE = {
         0: SCENES.LANTERN,
         1: SCENES.LUNAR,
@@ -621,54 +607,59 @@
         { name:"Lime",    paper:{r:210,g:255,b:115}, rim:{r:160,g:230,b: 75}, honey:{r:255,g:210,b:120}, cream:{r:248,g:255,b:240} },
       ];
 
-      function bias01(power=2.0){
-        return Math.pow(Math.random(), power);
-      }
+      function bias01(power=2.0){ return Math.pow(Math.random(), power); }
 
       // ---------- Lunar Phase scene ----------
-      const lunar = {
-        x: 0,
-        y: 0,
-        r: 120,
-        speed: 18,    // px/sec
-        glow: 0
-      };
+      const lunar = { x:0, y:0, r:120, speed:18, glow:0 };
 
       // ---------- Sun Sphere scene ----------
-      const sunScene = {
-        sunY: 0,
-        sunR: 130
-      };
+      const sunScene = { sunY:0, sunR:130 };
 
-      // ---------- Ocean scene ----------
-      const ocean = {
-        lights: []
-      };
+      // ---------- Ocean scene (improved undersea aesthetic) ----------
+      const ocean = { lights: [], motes: [] };
 
-      function initOceanLights(force=false){
-        if (ocean.lights.length && !force) return;
+      function initOcean(force=false){
+        if ((!ocean.lights.length || !ocean.motes.length) && !force){
+          // fall through to create if empty
+        }
+        if (ocean.lights.length && ocean.motes.length && !force) return;
+
         ocean.lights.length = 0;
-        const count = 14;
-        for (let i=0;i<count;i++){
+        ocean.motes.length = 0;
+
+        // Candle-like floats (but NO streak/lines)
+        const lightCount = 14;
+        for (let i=0;i<lightCount;i++){
           ocean.lights.push({
-            x: rand(w*0.08, w*0.92),
-            y: rand(h*0.62, h*0.92),
-            vx: rand(-6, 6),
-            vy: rand(-1.5, 1.5),
-            r: rand(6, 12),
-            a: rand(0.35, 0.75),
-            glow: rand(0.6, 1.2),
+            x: rand(w*0.10, w*0.90),
+            y: rand(h*0.62, h*0.90),
+            vx: rand(-7, 7),
+            vy: rand(-1.2, 1.2),
+            r: rand(7, 12),
+            a: rand(0.38, 0.78),
+            glow: rand(0.75, 1.35),
             wob: rand(0, Math.PI*2)
+          });
+        }
+
+        // Undersea motes / particles for depth
+        const moteCount = 90;
+        for (let i=0;i<moteCount;i++){
+          ocean.motes.push({
+            x: Math.random(),
+            y: Math.random(),
+            r: rand(0.6, 1.6),
+            a: rand(0.05, 0.16),
+            vx: rand(-4, 4),
+            vy: rand(-10, -3),
+            tw: rand(0, Math.PI*2),
+            twSp: rand(0.6, 1.4)
           });
         }
       }
 
       // ---------- Galactic Gravity scene ----------
-      const gravity = {
-        bodies: [],
-        sats: [],
-        drag: { active:false, satIndex:-1, pointerId:null },
-      };
+      const gravity = { bodies: [], sats: [], drag: { active:false, satIndex:-1, pointerId:null } };
 
       function initGravity(force=false){
         if (gravity.bodies.length && gravity.sats.length && !force) return;
@@ -708,7 +699,6 @@
         star.cy = h * 0.42;
         star.rBase = clamp(minDim * 0.165, 96, 190);
 
-        // Lunar sizing
         lunar.r = clamp(minDim * 0.16, 90, 170);
         lunar.y = h * 0.36;
 
@@ -728,7 +718,7 @@
         computeLayout();
         initSatellites(true);
         initLanterns(true);
-        initOceanLights(true);
+        initOcean(true);
         initGravity(true);
       }
       window.addEventListener('resize', resize, { passive:true });
@@ -1084,43 +1074,6 @@
 
           p.glow = Math.max(0, p.glow - dt * 0.90);
         }
-
-        for (let i=0;i<lanterns.length;i++){
-          for (let j=i+1;j<lanterns.length;j++){
-            const a = lanterns[i], b = lanterns[j];
-            if (a.z > 0.70 && b.z > 0.70) continue;
-
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const rr = (a.r + b.r) * 0.55 + 8;
-            const d2 = dx*dx + dy*dy;
-            if (d2 > 0 && d2 < rr*rr){
-              const d = Math.sqrt(d2);
-              const nx = dx / d;
-              const ny = dy / d;
-
-              const overlap = (rr - d);
-              a.x -= nx * overlap * 0.5;
-              a.y -= ny * overlap * 0.5;
-              b.x += nx * overlap * 0.5;
-              b.y += ny * overlap * 0.5;
-
-              const relVx = b.vx - a.vx;
-              const relVy = b.vy - a.vy;
-              const relN = relVx*nx + relVy*ny;
-              if (relN < 0){
-                const impulse = (-relN) * 0.55;
-                a.vx -= impulse * nx;
-                a.vy -= impulse * ny;
-                b.vx += impulse * nx;
-                b.vy += impulse * ny;
-              }
-
-              a.glow = Math.max(a.glow, 1);
-              b.glow = Math.max(b.glow, 1);
-            }
-          }
-        }
       }
 
       function drawLantern(p, tSec){
@@ -1155,7 +1108,6 @@
 
         const bw = rr * 1.30;
         const bh = rr * 1.85;
-
         const topW = bw * 0.88;
         const botW = bw * 1.02;
 
@@ -1199,28 +1151,12 @@
 
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.12 + 0.10*glowUp;
+        ctx.globalAlpha = 0.12 + 0.10*(0.18 + 0.82*p.glow);
         ctx.strokeStyle = `rgba(255,255,255,0.30)`;
         ctx.lineWidth = Math.max(1, rr*0.04);
         ctx.filter = blurPx ? `blur(${blurPx*0.6}px)` : 'none';
         lanternPath();
         ctx.stroke();
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = (0.05 + 0.08*glowUp) * alphaDepth;
-        ctx.strokeStyle = `rgba(255,255,255,0.35)`;
-        ctx.lineWidth = 1;
-        const ribCount = 4;
-        for (let k=0;k<ribCount;k++){
-          const t = (k/(ribCount-1)) * 2 - 1;
-          const x = t * bw * 0.28;
-          ctx.beginPath();
-          ctx.moveTo(x*0.85, -bh*0.52);
-          ctx.quadraticCurveTo(x, 0, x*0.90, bh*0.50);
-          ctx.stroke();
-        }
         ctx.restore();
 
         ctx.save();
@@ -1237,44 +1173,10 @@
         ctx.fill();
         ctx.restore();
 
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = alphaDepth;
-        ctx.filter = blurPx ? `blur(${blurPx*0.55}px)` : 'none';
-
-        const flameWob = 0.18*Math.sin(tSec*2.4 + p.id*0.9);
-        const flame = ctx.createRadialGradient(0, bh*0.44, rr*0.05, 0, bh*0.45, rr*0.75);
-        flame.addColorStop(0.0, `rgba(255,255,255,${0.95})`);
-        flame.addColorStop(0.22, `rgba(255,245,210,${0.82})`);
-        flame.addColorStop(0.55, `rgba(${pal.honey.r},${pal.honey.g},${pal.honey.b},${0.55})`);
-        flame.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = flame;
-
-        ctx.beginPath();
-        ctx.ellipse(0, bh*0.44, rr*0.22, rr*0.55, flameWob, 0, Math.PI*2);
-        ctx.fill();
-        ctx.restore();
-
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = (0.18 + 0.12*glowUp) * alphaDepth;
-        ctx.filter = blurPx ? `blur(${blurPx*0.4}px)` : 'none';
-        ctx.fillStyle = `rgba(255,255,255,0.60)`;
-        ctx.beginPath();
-        ctx.roundRect(-topW*0.33, -bh*0.72, topW*0.66, rr*0.22, rr*0.10);
-        ctx.fill();
-
-        ctx.strokeStyle = `rgba(255,255,255,0.35)`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(0, -bh*0.80, rr*0.18, Math.PI*0.10, Math.PI*0.90);
-        ctx.stroke();
-        ctx.restore();
-
         ctx.restore();
       }
 
-      // ---------- Celestial animation states ----------
+      // ---------- Celestial animation ----------
       function updateCelestialIdle(obj, nowMs){
         const t = nowMs * 0.001;
         obj.scale = 1 + 0.020 * Math.sin(t * 2 * Math.PI / 6.2);
@@ -1390,7 +1292,6 @@
       function hitLunarMoon(x,y){
         return inHitCircle(x,y,lunar.x,lunar.y,lunar.r*0.92);
       }
-
       function hitGravitySat(x,y){
         for (let i = gravity.sats.length - 1; i >= 0; i--){
           const s = gravity.sats[i];
@@ -1419,28 +1320,23 @@
       function resetPerSceneState(next, nowMs){
         sceneEnteredAt = nowMs;
 
-        // Reset fades / star
         star.state = 'idle';
         star.scale = 1;
         star.intensity = 1;
 
-        // Lunar
         if (next === SCENES.LUNAR){
           lunar.x = -lunar.r * 1.25;
           lunar.glow = 0;
         }
 
-        // Sun
         if (next === SCENES.SUN){
           sunScene.sunY = h + sunScene.sunR * 1.15;
         }
 
-        // Ocean
         if (next === SCENES.OCEAN){
-          initOceanLights(false);
+          initOcean(false);
         }
 
-        // Gravity
         if (next === SCENES.GRAVITY){
           initGravity(false);
           gravity.drag.active = false;
@@ -1462,7 +1358,6 @@
         dbl.lastKey = '';
         dbl.lastT = 0;
 
-        // A tiny tip on the hub only (optional)
         if (scene === SCENES.STAR){
           showOneShot("Tip: Double tap a satellite to enter Boo Planet.", 5200);
         }
@@ -1475,7 +1370,6 @@
 
       // ---------- Scene drawing helpers ----------
       function drawLanternSkyOverlays(){
-        // cozy sky wash + vignette (from your original lantern-only background)
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const sky = ctx.createRadialGradient(w*0.52, h*0.32, 0, w*0.52, h*0.42, Math.min(w,h)*0.95);
@@ -1496,7 +1390,6 @@
       }
 
       function updateAndDrawLunar(dt, tSec, nowMs){
-        // gentle glide, full view
         lunar.x += lunar.speed * dt;
         if (lunar.x > w + lunar.r*1.25) lunar.x = -lunar.r*1.25;
 
@@ -1505,7 +1398,6 @@
         const rr = lunar.r;
         const glow = 0.18 + 0.75*lunar.glow;
 
-        // halo
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const halo = ctx.createRadialGradient(lunar.x, lunar.y, rr*0.15, lunar.x, lunar.y, rr*2.9);
@@ -1516,7 +1408,6 @@
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // moon body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const body = ctx.createRadialGradient(lunar.x, lunar.y, rr*0.04, lunar.x, lunar.y, rr*1.05);
@@ -1529,7 +1420,6 @@
         ctx.fill();
         ctx.restore();
 
-        // gentle sheen
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const hl = ctx.createRadialGradient(lunar.x - rr*0.22, lunar.y - rr*0.22, rr*0.02, lunar.x - rr*0.22, lunar.y - rr*0.22, rr*0.55);
@@ -1545,13 +1435,11 @@
       }
 
       function updateAndDrawSunSphere(dt, tSec, nowMs){
-        // 8 seconds sunrise
         const elapsed = (nowMs - sceneEnteredAt) * 0.001;
         const dur = 8.0;
         const p = clamp(elapsed / dur, 0, 1);
         const e = easeInOutCubic(p);
 
-        // Sky transition from dark reddish to sky blue
         const topFrom = { r: 18, g: 8,  b: 20 };
         const midFrom = { r: 64, g: 18, b: 32 };
         const botFrom = { r: 10, g: 16, b: 42 };
@@ -1574,7 +1462,6 @@
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // Light starfield still peeks through early
         ctx.save();
         ctx.globalAlpha = (1 - e) * 0.55;
         drawStarLayer(starsFar,  tSec, 0, 0);
@@ -1582,14 +1469,8 @@
         drawStarLayer(starsNear, tSec, 0, 0);
         ctx.restore();
 
-        // Sun rises
-        const sun = {
-          x: w*0.5,
-          y: lerp(h + sunScene.sunR*1.1, h*0.42, e),
-          r: sunScene.sunR
-        };
+        const sun = { x: w*0.5, y: lerp(h + sunScene.sunR*1.1, h*0.42, e), r: sunScene.sunR };
 
-        // glow
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
         const halo = ctx.createRadialGradient(sun.x, sun.y, sun.r*0.2, sun.x, sun.y, sun.r*3.3);
@@ -1601,7 +1482,6 @@
         ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // body
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         const body = ctx.createRadialGradient(sun.x, sun.y, sun.r*0.04, sun.x, sun.y, sun.r*1.05);
@@ -1616,102 +1496,199 @@
         ctx.restore();
       }
 
-      function updateAndDrawOcean(dt, tSec, nowMs){
-        // Base: keep night sky then add ocean
-        // Ocean band
-        const horizonY = h * 0.58;
-
-        // subtle haze near horizon
-        ctx.save();
-        ctx.globalCompositeOperation = 'screen';
-        const haze = ctx.createLinearGradient(0, horizonY-120, 0, horizonY+140);
-        haze.addColorStop(0.0, 'rgba(180,220,255,0.10)');
-        haze.addColorStop(0.5, 'rgba(120,170,255,0.06)');
-        haze.addColorStop(1.0, 'rgba(0,0,0,0)');
-        ctx.fillStyle = haze;
-        ctx.fillRect(0, horizonY-140, w, 320);
-        ctx.restore();
-
-        // water body
+      // --- Ocean aesthetic helpers (caustics + rays + fog) ---
+      function drawUnderseaBackdrop(tSec){
+        // Deep water gradient (undersea feel)
         ctx.save();
         ctx.globalCompositeOperation = 'source-over';
-        const wg = ctx.createLinearGradient(0, horizonY, 0, h);
-        wg.addColorStop(0.0, 'rgba(10, 26, 58, 0.72)');
-        wg.addColorStop(0.6, 'rgba(6, 16, 42, 0.86)');
-        wg.addColorStop(1.0, 'rgba(2, 6, 20, 0.92)');
-        ctx.fillStyle = wg;
-        ctx.fillRect(0, horizonY, w, h - horizonY);
+        const g = ctx.createLinearGradient(0,0,0,h);
+        g.addColorStop(0.0, 'rgba(10, 55, 80, 0.55)');  // surface tint
+        g.addColorStop(0.35, 'rgba(6, 40, 70, 0.65)');
+        g.addColorStop(0.75, 'rgba(3, 20, 45, 0.78)');
+        g.addColorStop(1.0, 'rgba(2, 8, 22, 0.90)');   // deep
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
         ctx.restore();
 
-        // wave shimmer lines
+        // Soft volumetric rays (no hard "lines")
         ctx.save();
         ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.40;
-        for (let k=0;k<8;k++){
-          const yy = lerp(horizonY+18, h-16, k/7);
-          const amp = lerp(5, 14, k/7);
-          const freq = lerp(0.010, 0.022, k/7);
-          ctx.beginPath();
-          for (let x=0;x<=w;x+=10){
-            const y = yy + Math.sin(x*freq + tSec*0.9 + k*1.7) * amp * 0.25;
-            if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        ctx.globalAlpha = 0.18;
+        const rayCount = 6;
+        for (let i=0;i<rayCount;i++){
+          const x = w*(0.15 + 0.70*(i/(rayCount-1))) + Math.sin(tSec*0.12 + i*1.7)*18;
+          const y = h*0.05 + Math.cos(tSec*0.10 + i)*10;
+          const r0 = 0;
+          const r1 = Math.min(w,h) * 0.95;
+
+          const rg = ctx.createRadialGradient(x, y, r0, x, y, r1);
+          rg.addColorStop(0.00, 'rgba(210,250,255,0.28)');
+          rg.addColorStop(0.22, 'rgba(170,235,255,0.14)');
+          rg.addColorStop(0.58, 'rgba(120,200,255,0.06)');
+          rg.addColorStop(1.00, 'rgba(0,0,0,0)');
+
+          ctx.filter = 'blur(18px)';
+          ctx.fillStyle = rg;
+          ctx.fillRect(0,0,w,h);
+        }
+        ctx.filter = 'none';
+        ctx.restore();
+
+        // Caustics / dappled light: soft moving interference (no stroke lines)
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.22;
+        ctx.filter = 'blur(8px)';
+
+        const cell = 110; // coarse grid for performance
+        for (let y=0; y<=h+cell; y+=cell){
+          for (let x=0; x<=w+cell; x+=cell){
+            const nx = x / w;
+            const ny = y / h;
+
+            // Interference pattern
+            const p1 = Math.sin(nx*10.0 + tSec*0.55) * Math.cos(ny*12.0 - tSec*0.42);
+            const p2 = Math.cos(nx*7.0  - tSec*0.33) * Math.sin(ny*9.0  + tSec*0.60);
+            const p3 = Math.sin((nx+ny)*11.0 + tSec*0.25);
+            const v = (p1 + p2 + 0.7*p3) / 2.7;
+
+            // Brightness weighted toward upper water; fades with depth
+            const depthFade = clamp(1 - Math.pow(ny, 1.25), 0, 1);
+            const a = clamp((v*0.55 + 0.45), 0, 1) * depthFade;
+
+            if (a < 0.08) continue;
+
+            const rr = cell * (0.55 + 0.55*a);
+            const cg = ctx.createRadialGradient(x, y, rr*0.05, x, y, rr);
+            cg.addColorStop(0.0, `rgba(210,255,255,${0.18*a})`);
+            cg.addColorStop(0.5, `rgba(140,230,255,${0.10*a})`);
+            cg.addColorStop(1.0, 'rgba(0,0,0,0)');
+            ctx.fillStyle = cg;
+            ctx.fillRect(x-rr, y-rr, rr*2, rr*2);
           }
-          ctx.strokeStyle = 'rgba(180,220,255,0.20)';
-          ctx.lineWidth = 1;
-          ctx.stroke();
+        }
+        ctx.filter = 'none';
+        ctx.restore();
+
+        // Depth fog / diffusion
+        ctx.save();
+        ctx.globalCompositeOperation = 'source-over';
+        const fog = ctx.createLinearGradient(0,0,0,h);
+        fog.addColorStop(0.0, 'rgba(255,255,255,0.02)');
+        fog.addColorStop(0.35, 'rgba(180,240,255,0.05)');
+        fog.addColorStop(0.70, 'rgba(30,80,120,0.10)');
+        fog.addColorStop(1.0, 'rgba(0,0,0,0.20)');
+        ctx.fillStyle = fog;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      }
+
+      function updateAndDrawOcean(dt, tSec, nowMs){
+        initOcean(false);
+
+        // Undersea base (pretty + depth + caustics)
+        drawUnderseaBackdrop(tSec);
+
+        // "Surface" hint: soft bright cap at the very top
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const surf = ctx.createRadialGradient(w*0.52, h*0.02, 0, w*0.52, h*0.02, Math.min(w,h)*0.85);
+        surf.addColorStop(0.00, 'rgba(225,255,255,0.22)');
+        surf.addColorStop(0.30, 'rgba(160,240,255,0.10)');
+        surf.addColorStop(1.00, 'rgba(0,0,0,0)');
+        ctx.filter = 'blur(10px)';
+        ctx.fillStyle = surf;
+        ctx.fillRect(0,0,w,h);
+        ctx.filter = 'none';
+        ctx.restore();
+
+        // Floating motes (depth)
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (const m of ocean.motes){
+          m.tw += m.twSp * dt;
+          const tw = 0.75 + 0.25 * Math.sin(m.tw);
+
+          m.x = (m.x + (m.vx * dt) / w);
+          m.y = (m.y + (m.vy * dt) / h);
+
+          if (m.x < -0.05) m.x = 1.05;
+          if (m.x > 1.05)  m.x = -0.05;
+          if (m.y < -0.05) m.y = 1.05;
+          if (m.y > 1.05)  m.y = -0.05;
+
+          const px = m.x * w;
+          const py = m.y * h;
+
+          // stronger motes near mid-depth, softer deep
+          const depth = clamp(1 - Math.abs(m.y - 0.45) * 1.2, 0, 1);
+          ctx.fillStyle = `rgba(220,250,255,${m.a * tw * depth})`;
+          ctx.beginPath();
+          ctx.arc(px, py, m.r * tw, 0, Math.PI*2);
+          ctx.fill();
         }
         ctx.restore();
 
-        // candle lights drifting
-        initOceanLights(false);
+        // Candle lights (NO wave lines, NO reflection ellipses)
         for (const p of ocean.lights){
-          p.wob += dt * 1.3;
+          p.wob += dt * 1.2;
           p.x += p.vx * dt;
-          p.y += p.vy * dt + Math.sin(p.wob) * 0.35;
+          p.y += p.vy * dt + Math.sin(p.wob) * 0.25;
 
-          if (p.x < -40) p.x = w + 40;
-          if (p.x > w + 40) p.x = -40;
-          p.y = clamp(p.y, horizonY + 8, h - 10);
+          if (p.x < -60) p.x = w + 60;
+          if (p.x > w + 60) p.x = -60;
 
-          const glow = 0.65 + 0.35*Math.sin(p.wob*1.7);
+          // keep them in lower half, like “guiding lights”
+          p.y = clamp(p.y, h*0.62, h*0.90);
+
+          const flick = 0.78 + 0.22*Math.sin(p.wob*1.9);
           const rr = p.r;
 
-          // halo
+          // soft bloom
           ctx.save();
           ctx.globalCompositeOperation = 'screen';
-          const halo = ctx.createRadialGradient(p.x, p.y, rr*0.15, p.x, p.y, rr*6.0);
-          halo.addColorStop(0.0, `rgba(255,220,150,${0.18*p.glow*glow})`);
-          halo.addColorStop(0.35, `rgba(255,160,120,${0.10*p.glow*glow})`);
+          ctx.globalAlpha = 0.85 * p.a;
+          ctx.filter = 'blur(6px)';
+          const halo = ctx.createRadialGradient(p.x, p.y, rr*0.12, p.x, p.y, rr*7.0);
+          halo.addColorStop(0.0, `rgba(255,235,190,${0.22*p.glow*flick})`);
+          halo.addColorStop(0.35, `rgba(255,190,140,${0.13*p.glow*flick})`);
+          halo.addColorStop(0.70, `rgba(170,230,255,${0.06*p.glow*flick})`);
           halo.addColorStop(1.0, 'rgba(0,0,0,0)');
           ctx.fillStyle = halo;
           ctx.fillRect(0,0,w,h);
+          ctx.filter = 'none';
           ctx.restore();
 
-          // core
+          // orb core (small + crisp)
           ctx.save();
           ctx.globalCompositeOperation = 'lighter';
-          ctx.fillStyle = `rgba(255,245,210,${0.72*p.a})`;
+          const core = ctx.createRadialGradient(p.x, p.y, rr*0.02, p.x, p.y, rr*1.15);
+          core.addColorStop(0.0, `rgba(255,255,255,${0.82*p.a})`);
+          core.addColorStop(0.25, `rgba(255,245,220,${0.65*p.a})`);
+          core.addColorStop(0.65, `rgba(255,210,160,${0.28*p.a})`);
+          core.addColorStop(1.0, 'rgba(0,0,0,0)');
+          ctx.fillStyle = core;
           ctx.beginPath();
           ctx.arc(p.x, p.y, rr, 0, Math.PI*2);
           ctx.fill();
           ctx.restore();
-
-          // reflection
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.globalAlpha = 0.35*p.a;
-          ctx.fillStyle = 'rgba(255,210,160,0.28)';
-          ctx.beginPath();
-          ctx.ellipse(p.x, p.y + rr*2.2, rr*1.1, rr*2.8, 0, 0, Math.PI*2);
-          ctx.fill();
-          ctx.restore();
         }
+
+        // gentle vignette for depth
+        ctx.save();
+        ctx.globalCompositeOperation = 'multiply';
+        const vig = ctx.createRadialGradient(w*0.5, h*0.55, Math.min(w,h)*0.20, w*0.5, h*0.55, Math.min(w,h)*0.88);
+        vig.addColorStop(0.0, 'rgba(0,0,0,0)');
+        vig.addColorStop(0.65, 'rgba(0,0,0,0.14)');
+        vig.addColorStop(1.0, 'rgba(0,0,0,0.34)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
       }
 
       function updateAndDrawGravity(dt, tSec, nowMs){
         initGravity(false);
 
-        // update sats
         for (const s of gravity.sats){
           if (s.dragging) continue;
           const b = gravity.bodies[s.bodyIndex];
@@ -1721,7 +1698,6 @@
           s.glow = Math.max(0, s.glow - dt * 0.9);
         }
 
-        // draw orbital hints
         ctx.save();
         ctx.globalAlpha = 0.16;
         ctx.strokeStyle = 'rgba(255,255,255,0.14)';
@@ -1734,9 +1710,7 @@
         }
         ctx.restore();
 
-        // draw bodies
-        for (let i=0;i<gravity.bodies.length;i++){
-          const b = gravity.bodies[i];
+        for (const b of gravity.bodies){
           ctx.save();
           ctx.globalCompositeOperation = 'screen';
           const halo = ctx.createRadialGradient(b.x, b.y, b.r*0.2, b.x, b.y, b.r*3.0);
@@ -1760,7 +1734,6 @@
           ctx.restore();
         }
 
-        // draw satellites
         for (const s of gravity.sats){
           const rr = s.rBase;
           const glow = 0.2 + 0.8*s.glow;
@@ -1785,13 +1758,7 @@
         }
       }
 
-      // ---------- Scene swapping ----------
-      function setScreen(which){
-        welcome.classList.toggle('active', which === 'welcome');
-        play.classList.toggle('active', which === 'play');
-      }
-
-      // ---------- Input ----------
+      // ---------- Double tap + input ----------
       canvas.addEventListener('pointerdown', (e) => {
         if (!allowInput) return;
 
@@ -1804,13 +1771,7 @@
           const li = hitLantern(x,y);
           if (li !== -1){
             const p = lanterns[li];
-
-            if (p.mode !== 'vivid'){
-              p.mode = 'vivid';
-            } else {
-              p.vividIndex = (p.vividIndex + 1) % SKY_LANTERN_COLORS.length;
-            }
-
+            p.vividIndex = (p.vividIndex + 1) % SKY_LANTERN_COLORS.length;
             p.glow = 1;
             const kick = lerp(34, 18, p.z);
             p.vx += rand(-kick, kick);
@@ -1820,9 +1781,7 @@
         }
 
         if (scene === SCENES.LUNAR){
-          if (hitLunarMoon(x,y)){
-            lunar.glow = 1;
-          }
+          if (hitLunarMoon(x,y)) lunar.glow = 1;
           return;
         }
 
@@ -1842,25 +1801,21 @@
         }
 
         if (scene !== SCENES.STAR){
-          // SUN and OCEAN are ambient on tap for now
           return;
         }
 
-        // ---- STAR HUB ----
         const idx = hitSatellite(x,y);
         if (idx !== -1){
           const s = satellites[idx];
 
           const key = `sat:${s.id}`;
           if (isDoubleTap(key, now)){
-            // NEW: double-tap satellite -> main body swells 6x -> fade -> enter mapped scene
             const target = SAT_TO_SCENE[s.id] ?? SCENES.LANTERN;
             pickNewPalette(now);
             startSceneTransition(target, now);
             return;
           }
 
-          // single tap: swell + allow dragging (unchanged)
           startSatelliteSwell(s, now);
           drag.active = true;
           drag.satIndex = idx;
@@ -1871,13 +1826,14 @@
           return;
         }
 
-        // star tap: bloom only (no longer navigates)
-        const starR = star.rBase * 1.22;
+        const starR = star.rBase * reminderScale(1.22);
         if (inHitCircle(x,y,star.cx,star.cy,starR)){
           if (star.state === 'idle') startBloom(star, now);
           pickNewPalette(now);
         }
       }, { passive:false });
+
+      function reminderScale(v){ return v; } // tiny helper to keep diff minimal
 
       canvas.addEventListener('pointermove', (e) => {
         if (!allowInput) return;
@@ -1903,12 +1859,10 @@
           if (!s) return;
           s.x = x;
           s.y = y;
-          return;
         }
       }, { passive:false });
 
       function endDrag(e){
-        // star hub drag end
         if (scene === SCENES.STAR){
           if (drag.active && drag.pointerId === e.pointerId){
             const s = satellites[drag.satIndex];
@@ -1922,14 +1876,12 @@
           }
         }
 
-        // gravity drag end
         if (scene === SCENES.GRAVITY){
           if (gravity.drag.active && gravity.drag.pointerId === e.pointerId){
             const s = gravity.sats[gravity.drag.satIndex];
             if (s){
               s.dragging = false;
 
-              // snap orbit to nearest body (push/pull changes orbit)
               let best = 0;
               let bestD2 = Infinity;
               for (let i=0;i<gravity.bodies.length;i++){
@@ -1947,7 +1899,6 @@
               const rr = Math.sqrt(dx*dx + dy*dy);
               s.orbitRadius = clamp(rr, b.r * 1.25, Math.min(w,h) * 0.48);
               s.angle = Math.atan2(dy, dx);
-              // keep existing omega but slightly adjust for "feel"
               s.omega = clamp(s.omega + rand(-0.06, 0.06), -0.85, 0.85);
             }
 
@@ -1970,12 +1921,16 @@
         }catch(_e){}
       }
 
+      function setScreen(which){
+        welcome.classList.toggle('active', which === 'welcome');
+        play.classList.toggle('active', which === 'play');
+      }
+
       startBtn.addEventListener('click', async () => {
         await startMusic();
         setScreen('play');
         pressToPlay.style.display = 'block';
         allowInput = true;
-
         goToScene(SCENES.STAR, performance.now());
       });
 
@@ -1989,16 +1944,13 @@
 
         updatePalette(nowMs);
 
-        // Base background
+        // Base background (kept for all scenes; Ocean overlays its own underwater wash)
         drawBackground(tSec);
 
-        // Rotations
         star.rot  += dt * 0.18;
         star.rot2 += dt * 0.11;
 
-        // Scene-specific drawing
         if (scene === SCENES.STAR){
-          // allow idle bloom unless in transition
           if (!transition.active){
             updateCelestial(star, nowMs, { bloomScale: 3.0 });
           }
@@ -2033,7 +1985,6 @@
           updateAndDrawGravity(dt, tSec, nowMs);
         }
 
-        // Transition overlay (main body swell + fade)
         if (transition.active === true){
           updateTransition(nowMs);
           drawFadeOverlay(transition.alpha);
@@ -2083,7 +2034,7 @@
       resize();
       initSatellites(true);
       initLanterns(true);
-      initOceanLights(true);
+      initOcean(true);
       initGravity(true);
 
       requestAnimationFrame(tick);
